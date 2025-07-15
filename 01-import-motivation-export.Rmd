@@ -245,8 +245,7 @@ rm(list = c("berry_penalty_analysis_data",
             "cider_penalty_data", 
             "cleaned_berry_data",
             "raw_berry_data",
-            "raw_cider_data",
-            "zones"))
+            "raw_cider_data"))
 ```
 
 ## Saving your data

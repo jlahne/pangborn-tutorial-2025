@@ -45,24 +45,26 @@ In graphical form, the following diagram ([from VT Professor JP Gannon](https://
 
 Our cider data is already relatively tidy and is much easier to visually inspect, so we will be primarily using it in this section.  
 
-Let's begin by making an example `ggplot()` to demonstrate how it works.
+Let's begin by making an example `ggplot()` to demonstrate how it works.  We will focus on the cider CA coordinates so that we can build up a somewhat meaningful plot.
 
 ```{r a first ggplot}
 # We start with our data and pipe it into ggplot
-raw_cider_data %>%
+ca_cider_coords %>%
   # Here we set up the base plot
-  ggplot(mapping = aes(x = MerlynScale_Ranking, y = Liking)) + 
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
    # Here we tell our base plot to add points
   geom_point()                          
 ```
 
-This doesn't look all that impressive--partly because the data being plotted itself isn't that sensible, and partly because we haven't made many changes.  But before we start looking into that, let's break down the parts of this command.
+This doesn't look all that impressive--partly because the data being plotted itself isn't sensible without other context that exists in the data frame, and partly because we haven't made many changes.  But before we start looking into that, let's break down the parts of this command.
 
 ## The `aes()` function and `mapping = ` argument
 
 The `ggplot()` function takes two arguments that are essential, as well as some others you'll rarely use.  The first, `data = `, is straightforward, and you'll usually be passing data to the function at the end of some pipeline using `%>%`
 
-The second, `mapping = `, is less clear.  This argument requires the `aes()` function, which can be read as the "aesthetic" function.  The way that this function works is quite complex, and really not worth digging into here, but I understand it in my head as **telling `ggplot()` what part of my data is going to connect to what part of the plot**.  So, if we write `aes(x = MerlynScale_Ranking)`, we can read this in our heads as "the values of x will be mapped from the 'MerlynScale_Ranking' column". 
+The second, `mapping = `, is less clear.  This argument requires the `aes()` function, which can be read as the "aesthetic" function.  The way that this function works is quite complex, and really not worth digging into here, but I understand it in my head as **telling `ggplot()` what part of my data is going to connect to what part of the plot**.  So, if we write `aes(x = `Dim 1`)`, we can read this in our heads as "the values of x will be mapped from the 'Dim 1' column". 
+
+> NB: The use of the `\`` character in `\`Dim 1\`` is because the name is technically "non-syntactic": it has a space in it.  `R` allows us to save objects with names that violate the rules--containing whitespace (` `), starting with a number character, or including characters like `(`, `)`, `$`, etc by using the `\`` operators.  The `{tidyverse}` functions do this automatically.
 
 This sentence tells us the other important thing about `ggplot()` and the `aes()` mappings: **mapped variables each have to be in their own column**.  This is another reason that `ggplot()` requires tidy data. 
 
@@ -71,93 +73,135 @@ This sentence tells us the other important thing about `ggplot()` and the `aes()
 In the above example, we added (literally, using `+`) a function called `geom_point()` to the base `ggplot()` call.  This is functionally a "layer" of our plot, that tells `ggplot2` how to actually visualize the elements specified in the `aes()` function--in the case of `geom_point()`, we create a point for each row's combination of `x = MerlynScale_Ranking` and `y = Liking`.
 
 ```{r what we are plotting in this example}
-raw_cider_data %>%
-  select(MerlynScale_Ranking, Liking)
+ca_cider_coords %>% 
+  select(`Dim 1`, `Dim 2`)
 ```
 
 There are many `geom_*()` functions in `ggplot2`, and many others defined in other accessory packages.  These are the heart of visualizations.  We can swap them out to get different results:
 
 ```{r switching geom switches the way the data map}
-raw_cider_data %>%
-  ggplot(mapping = aes(x = MerlynScale_Ranking, y = Liking)) + 
-  geom_smooth()
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  # connecting our points with a line makes even less sense
+  geom_line()
 ```
-Here we fit a smoothed line to our data using the default methods in `geom_smooth()` (which in this case heuristically defaults to a spline model with LOESS smoothing, but could be linear, GAM, etc).
+The default `geom_line()` behavior is to connect points ordered by the column that is assigned to `x = ` in the `aes()` function.
 
 We can also combine layers, as the term "layer" implies:
 
 ```{r geoms are layers in a plot}
-raw_cider_data %>%
-  ggplot(mapping = aes(x = MerlynScale_Ranking, y = Liking)) + 
-  geom_jitter() + # add some random noise to show overlapping points
-  geom_smooth()
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  geom_point() +
+  # add a layer with the names of the points
+  geom_text(mapping = aes(label = name))
 ```
 
-Note that we don't need to tell *either* `geom_smooth()` or `geom_jitter()` what `x` and `y` are--they "inherit" them from the `ggplot()` function to which they are added (`+`), which defines the plot itself.
+Note that we don't need to tell *either* `geom_point()` or `geom_text()` what `x` and `y` are--they "inherit" them from the `ggplot()` function to which they are added (`+`), which defines the plot itself.  But we did need to give a *new* mapping--`label = name`--to the `geom_text()` layer, which tells it which column to get the labels for each point.
 
-What other arguments can be set to aesthetics?  Well, we can set other visual properties like **color**, **size**, **transparency** (called "alpha"), and so on.  For example, let's try to look at whether there is a relationship between whether a cider is perceived as "Dry" through CATA, measured as "Dry" (low values) on the Merlyn Scale, and overall liking.
+What other arguments can be set to aesthetics?  Well, we can set other visual properties like **color**, **size**, **transparency** (called "alpha"), and so on.  Let's go ahead and color the different points and labels by whether they are ciders or CATA descriptors--whether they are rows or columns in the original contingency table.
 
 ```{r here are some other parts of the plot we can control with data}
-raw_cider_data %>%
-  mutate(Dry = as.factor(Dry)) %>%
-  ggplot(mapping = aes(x = MerlynScale_Ranking, y = Liking, color = Dry)) +
-  geom_jitter(alpha = 1/2) + 
-  scale_color_manual(values = c("darkblue", "darkorange")) + 
-  theme_bw()
-
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  geom_text(mapping = aes(label = name))
 ```
 
-We can see that most of the orange dots are to the left side of the figure (associated with lower Merlyn scale ratings), and that most of th3e blue dots are to the right (associated with higher Merlyn Scale ratings).  It's hard to make sense of patterns of liking in this visualization, but it looks like "Dry" CATA checks may have somewhat lower liking ratings overall.
+Notice again that we don't have to specify our color inside each label--because we define this "aesthetic" at the level of the plot in the `ggplot()` function all layers that can use it will "inherit" it.
+
+If we want to only color a single layer, we have a couple options.  The simplest is simply to define the mapping only at the layer level, not the plot level.
+
+```{r color only one layer}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  # we will only color the points, not the text
+  geom_point(mapping = aes(color = type)) +
+  geom_text(mapping = aes(label = name))
+```
+
 
 ## Arguments inside and outside of `aes()`
 
-In the last plot, we saw an example in the `geom_jitter(alpha = 1/2)` function of setting the `alpha` (transparency) aesthetic element directly, without using `aes()` to **map** a variable to this aesthetic.  That is why this is not wrapped in the `aes()` function.  In `ggplot2`, this is how we set aesthetics to fixed values.  
+In the above plots, we are obviously unhappy with the position of the text in regards to the points: we are overplotting!  What if we wanted to move our text so that it's not centered on the $(x,y)$ point?  (We will see a better way to do this automatically later.)
 
-If we had a value we wanted to map transparency to, we would set `aes(alpha = <variable>)`.  In this dataset, I can't think of a good option for alpha, but note that we can set any variable in these two ways:
+```{r}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  geom_point(mapping = aes(color = type)) +
+  geom_text(mapping = aes(label = name),
+            hjust = "outward",
+            color = "darkblue")
+```
 
-```{r using the aes function}
-# First, here is the previous figure, showing how we can set aesthetics
-raw_cider_data %>%
-  mutate(Dry = as.factor(Dry)) %>%
-  ggplot(aes(x = MerlynScale_Ranking, y = Liking)) + 
-  # We can set new aes() mappings in individual layers, as well as the plot itself
-  geom_jitter(aes(color = Dry)) + 
-  scale_color_manual(values = c("darkblue", "darkorange")) +
-  theme_bw()
+Here we set two aesthetics that *could* be in the `aes()` function and tied to data, but that we want to only set to a single value: we want all of our text to be `"darkblue"` (sure, why not?) and we use the `hjust = "outward"` text alignment option to push our text away from the center of the plot and thus not to overplot our points.  
 
-# And now we manually set a color for our points: note this means our color
-# WON'T change with different values of a variable.
-raw_cider_data %>%
-  mutate(Dry = as.factor(Dry)) %>%
-  ggplot(aes(x = MerlynScale_Ranking, y = Liking)) + 
-  # notice we no longer use aes() below, and color no longer matches `Dry`
-  geom_jitter(color = "darkorange") + 
-  theme_bw()
+Here I will also note that manual text adjustment is usually not the best approach with text-heavy scatterplots such as are common in sensory science biplots.  We will usually prefer to use an automatic approach for adjusting text position from the `{ggrepel}` package.  We can either load `{ggrepel}` directly using `library(ggrepel)` or we can use the `::` syntax to access an installed function without loading the entire namespace.
+
+```{r showing ggrepel}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  geom_point(mapping = aes(color = type)) +
+  # here we opt for not loading the package
+  ggrepel::geom_text_repel(mapping = aes(label = name),
+            color = "darkblue") +
+  scale_color_manual(values = c("darkorange", "darkgreen"))
 ```
 
 ### Using `theme_*()` to change visual options quickly
 
-In the last several plots, notice that we have changed from the default (and to my mind unattractive) grey background of `ggplot2` to a black and white theme.  This is by adding a `theme_bw()` call to the list of commands.  `ggplot2` includes a number of default `theme_*()` functions, and you can get many more through other `R` packages.  They can have subtle to dramatic effects:
+In the last several plots, notice that we are using the default (and to my mind unattractive) grey background of `ggplot2`.  If this tutorial had a single goal, it would be to eliminate this theme from published papers.  It looks *bad*.
+
+```{r adding a different theme}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  geom_point(mapping = aes(color = type)) +
+  ggrepel::geom_text_repel(mapping = aes(label = name),
+            color = "darkblue") +
+  # here we switch to a black and white theme
+  theme_bw()
+```
+
+We can easily get rid of the grey by adding a `theme_bw()` call to the list of commands.  `ggplot2` includes a number of default `theme_*()` functions, and you can get many more through other `R` packages.  They can have subtle to dramatic effects:
 
 ```{r using the theme functions}
-raw_cider_data %>%
-  ggplot(aes(x = MerlynScale_Ranking, y = Liking)) + 
-  geom_jitter() + 
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  geom_point(mapping = aes(color = type)) +
+  ggrepel::geom_text_repel(mapping = aes(label = name),
+            color = "darkblue") + 
   theme_void()
 ```
 
-You can edit every last element of the plot's theme using the base `theme()` function, which is powerful but a little bit tricky to use.
+The `theme_*()` functions are complete sets of plot background options.  You can edit every last element of the plot's theme using the base `theme()` function, which is powerful but a little bit tricky to use.
 
 ```{r using theme}
-raw_cider_data %>%
-  ggplot(aes(x = MerlynScale_Ranking, y = Liking)) + 
-  geom_jitter() + 
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  geom_point(mapping = aes(color = type)) +
+  ggrepel::geom_text_repel(mapping = aes(label = name),
+            color = "darkblue") + 
   theme_bw() + 
-  # we use theme() to remove grid lines, for example
-  theme(panel.grid = element_blank())
+  # we use theme() to remove grid lines and move the legend, for example
+  theme(panel.grid = element_blank(),
+        legend.position = "bottom")
 ```
 
 Most of the use of `theme()` involves functions names as `element_*()`.  When we remove elements, for example, we use `element_blank()` (not, for example, `NA` or `NULL` as we typically would in other parts of `R`).
+
+When we want to change how our text is formatted (not the values, but the formatting), we use `element_text()` calls.
+
+```{r element_text}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  geom_point(mapping = aes(color = type)) +
+  ggrepel::geom_text_repel(mapping = aes(label = name),
+            color = "darkblue") +
+  theme_bw() + 
+  # let's make the axis titles bold and the labels serif-font
+  theme(axis.title = element_text(face = "bold"),
+        axis.text = element_text(family = "serif"))
+```
 
 Finally, we can set default themes for a particular script using the `theme_set()` function.  We can also use this to set custom defaults:
 
@@ -167,12 +211,14 @@ theme_set(
     theme(panel.grid.minor = element_blank())
 )
 
-raw_cider_data %>%
-  ggplot(aes(x = MerlynScale_Ranking, y = Liking)) + 
-  geom_jitter()
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`)) + 
+  geom_point(mapping = aes(color = type)) +
+  ggrepel::geom_text_repel(mapping = aes(label = name),
+            color = "darkblue")
 ```
 
-All plots from here on will *default* to the `theme_bw()` theme, with the "minor" grid lines removed for a cleaner grid look.
+All plots from here on in the script will *default* to the `theme_bw()` theme, with the "minor" grid lines removed for a cleaner grid look.
 
 ### Changing aesthetic elements with `scale_*()` functions
 
@@ -187,11 +233,13 @@ Scale functions work by telling `ggplot()` *how* to map aesthetic variables to v
 
 ```{r ggplots are R objects}
 p <- 
-  raw_cider_data %>%
-  mutate(Dry = as.factor(Dry)) %>%
-  # This block gets us a subset of beer styles for clear visualization
-  ggplot(mapping = aes(x = Liking)) + 
-  geom_density(mapping = aes(fill = Dry), alpha = 1/3, color = "transparent")
+  ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name), 
+                           # this command stops this layer from being added to
+                           # the legend, to make it look cleaner
+                           show.legend = FALSE)
 
 p
 ```
@@ -199,7 +247,7 @@ p
 We can take a saved plot (like `p`) and use scales to change how it is visualized.
 
 ```{r we can modify stored plots after the fact}
-p + scale_fill_viridis_d()
+p + scale_color_viridis_d()
 ```
 
 `ggplot2` has a broad range of built-in options for scales, but there are many others available in add-on packages that build on top of it.  The `scale_*_viridis_*()` functions use a package callled `viridis` that provides (theoretically) color-blind safe colors for both continuous (gradient) and categorical (discrete) mappings, but I do find that their defaults (using light colors like yellow on one end of the scale) are hard to see for anyone!
@@ -208,26 +256,47 @@ As we saw above, you can also build your own scales using the `scale_*_manual()`
 
 ```{r another example of posthoc plot modification}
 # We'll pick 14 random colors from the colors R knows about
-random_colors <- print(colors()[sample(x = 1:length(colors()), size = 10)])
 
 p + 
-  scale_fill_manual(values = random_colors)
+  scale_color_manual(values = c("wheat", "darkviolet"))
 ```
 
 ### Finally, `facet_*()`
 
+So far we've seen how to visualize the overall configuration of our ciders by their CATA attributes using a Correspondence Analysis.  These results are, of course, based on an underlying contingency table:
+
+```{r cider contingency table}
+cider_contingency
+```
+
+A natural visualization to quickly assess CATA results is of course a bar plot.
+
+```{r}
+cider_contingency %>% 
+  as_tibble(rownames = "sample") %>%
+  pivot_longer(-sample) %>%
+  ggplot(mapping = aes(x = name, y = value, fill = sample)) + 
+  geom_col(position = "dodge") + 
+  labs(x = NULL, y = NULL) + 
+  # coord_*() functions affect how the axes are plotted;
+  # coord_flip() switches the x- and y-axes
+  coord_flip()
+```
+
+This is obviously not ideal for visualization: 
+
+1. It is hard to see the bars.
+2. CA plots are driven by ratios, so it would be good to see differences based on rates of endorsement for CATA per-attribute, not overall (common attributes swamp uncommon attributes).
+
 The last powerful tool I want to show off is the ability of `ggplot2` to make what [Edward Tufte called "small multiples"](https://socviz.co/groupfacettx.html#facet-to-make-small-multiples): breaking out the data into multiple, identical plots by some categorical classifier in order to show trends more effectively.
 
-So far we've seen how to visualize the overall liking of ciders in our small data set by the Merlyn Scale Ranking, and how to assign color, transparency, and fill to other attributes.  We can use such an approach to get a quick picture of the CATA selections for each cider in a clear, easy to see visualization:
-
 ```{r cider-facets}
-raw_cider_data %>%
-  pivot_longer(Fresh_Apples:Synthetic) %>%
-  group_by(Sample_Name, Temperature, name) %>%
-  summarize(total = sum(value)) %>%
-  ggplot(aes(x = interaction(Sample_Name, Temperature), y = total)) + 
-  geom_col(aes(fill = Sample_Name)) +
-  scale_fill_manual(values = wesanderson::wes_palettes$FantasticFox1) + 
+cider_contingency %>% 
+  as_tibble(rownames = "sample") %>%
+  pivot_longer(-sample) %>%
+  ggplot(aes(x = sample, y = value)) + 
+  geom_col(aes(fill = sample)) +
+  scale_fill_manual(values = wesanderson::wes_palettes$AsteroidCity2) + 
   coord_flip() + 
   facet_wrap(~name, ncol = 6) + 
   labs(x = NULL, y = NULL, fill = NULL) + 
@@ -238,7 +307,7 @@ We can see that overall for the most frequently used attributes, the serving tem
 
 But in the previous part of this workshop, we showed much more complex plots for our berry data, which showed the same plot broken up by a classifying variable: this is called "faceting".  Let's return from our cider data to our berry data in order to finally complete the workflow I showed in the beginning of the workshop.
 
-Now we are prepared to walk through the entire workflow
+Now we are prepared to walk through the entire workflow:
 
 ```{r berry-penalty-plots}
 # First we wrangle our data using the tools we've learned to get penalties/lifts
