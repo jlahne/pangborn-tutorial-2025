@@ -1,14 +1,14 @@
 ---
 title: "Pre-Tutorial Setup for 'Publication-quality data visualizations using the R tidyverse'"
 tutorial:
-  id: "pre-tutorial-setup-2024"
+  id: "pre-tutorial-setup-2025"
   version: 1.0
 output: 
   learnr::tutorial:
     progressive: true
     allow_skip: true
 runtime: shiny_prerendered
-description: "There are a few things you need to do to set up for our sensometrics tutorial. This step-by-step walkthrough will ensure that you have R, RStudio, and all necessary packages correctly installed before you arrive in Paris."
+description: "There are a few things you need to do to set up for our sensometrics tutorial. This step-by-step walkthrough will ensure that you have R, RStudio, and all necessary packages correctly installed before you arrive in Philadelphia."
 ---
 
 ```{r setup, include = FALSE}
@@ -19,6 +19,15 @@ options(tutorial.exercise.timelimit = 60,
 ```
 
 ## Introduction
+This step-by-step walkthrough has two parts:
+
+1. Instructions to download the required software and check that it's set up correctly, which *all* participants should complete as soon as possible using the **computer you will bring to the workshop**.
+2. An optional series of exercises testing basic R knowledge like data types and using functions, which includes links to external resources. We recommend this for anyone nervous about their ability to keep up.
+
+The first portion will take about 15 minutes to read and run the tests. If you don't yet have R and Rstudio on your laptop, it will take longer, depending on your internet speed and whether you need approval from you IT department.
+
+## Part 1: Required Software
+
 In order to be prepared to participate for the in-person tutorial on publication-quality graphics in the tidyverse, you should bring a laptop that has the following installed:
 
 * `R` (version 4.1.0 or newer)
@@ -33,11 +42,11 @@ In order to be prepared to participate for the in-person tutorial on publication
   + **cowplot**
   + **patchwork**
   + **wesanderson**
-* The tutorial materials from our [GitHub](https://github.com/lhami/sensometrics-r-tutorial-2024/blob/main/code/sensometrics-2024-code-download.zip)
+* The tutorial materials from our [GitHub](https://github.com/jlahne/pangborn-r-tutorial-2025/). You can download the data we'll use [here now](https://github.com/jlahne/pangborn-r-tutorial-2025/blob/main/code/pangborn-2025-code-download.zip), and the code files will be finalized about a week before the conference.
 
-You may need help or pre-approval from your IT department if you will be using a work laptop. You should install all of these pieces of software and run the test code **before you travel** to minimize the setup necessary at the start of the tutorial.
+You may need help or pre-approval from your IT department if you will be using a work laptop. You should install all of these pieces of software and run the test code **before you travel** to minimize the setup necessary at the start of the tutorial. **Don't** plan to rely on internet access at the venue during/right before the tutorial--we're always the very first thing on the conference schedule, so there are often wi-fi issues still being worked out.
 
-If you get stuck or need any help, email us at **jlahne at vt dot edu** and **lhamilton at vsu dot edu**.
+If you get stuck or need any help, email us at **jlahne at vt dot edu** and **hamilton at flavorlinguist dot com**.
 
 ## Installing R
 You will need the free, open-source statistical programming language `R` installed to participate in the tutorial. This should be possible even on "managed" work computers--you can install `R` to your local profile without admin credentials.
@@ -150,7 +159,7 @@ You can use `?` in `R` to pull up help files for any function in a package you h
 
 `?ggrepel::geom_text_repel`
 
-You pnly have to read the two sentences under the **Description** heading. We don't expect you to understand what all of this means yet.
+You only have to read the two sentences under the **Description** heading. We don't expect you to understand what all of this means yet.
 
 ```{r rpackage-check, echo=FALSE}
 question("What does `geom_text_repel()` repel text *away from*?",
@@ -164,10 +173,10 @@ question("What does `geom_text_repel()` repel text *away from*?",
          allow_retry = TRUE)
 ```
 
-## Downloading example code
-To help you follow along during the tutorial, we have made an `R` Project for you with code to complete everything we intend to do, as well as all of the data and a troubleshooting script called `environmenttest.R`.
+## Downloading data
+During the tutorial, we will be using two example sensory datasets for all of our plots.
 
-Download the pre-made archive of code and data from the [workshop github repo](https://github.com/lhami/sensometrics-r-tutorial-2024/blob/main/code/sensometrics-2024-code-download.zip) now.
+Download the pre-made archive of data from the [workshop github repo](https://github.com/jlahne/pangborn-r-tutorial-2025/blob/main/code/pangborn-2025-code-download.zip) now.
 
 ![Click the download arrow on the righthand side of the linked page](images/downloading-from-github.png){width=100%}
 
@@ -177,11 +186,11 @@ Open the unzipped folder in the file explorer. It should have an `.Rproj` file a
 ![The windows file explorer preview for a zipped archive, which you must unzip before you can open the `.Rproj` file as expected.](images/zipped-archive-file-explorer.png){width=100%}
 
 ### Opening the R Project
-Double-click on `sensometrics-r-tutorial-2024.Rproj` to open the project in RStudio, which will also set your working directory to this folder.
+Double-click on `pangborn-r-tutorial-2025.Rproj` to open the project in RStudio, which will also set your working directory to this folder.
 
 In the `Files` pane (which will be on the bottom right unless you've changed your settings), open `environmenttest.R`. Copy-and-paste this code into the console or use Shift + Enter to run each line in order.
 
-If the `R` console prints any red errors at this point, please send them to us in an email (jlahne at vt dot edu & lhamilton at vsu dot edu). If your packages are installed correctly, this code should clean up the data set we'll be demonstrating our plots with, run a Correspondence Analysis, and print the first singular value of the decomposition.
+If the `R` console prints any red errors at this point, please send them to us in an email (jlahne at vt dot edu & hamilton at flavorlinguist dot com). If your packages are installed correctly, this code should clean up the data set we'll be demonstrating our plots with, run a Correspondence Analysis, and print the first singular value of the decomposition.
 
 ```{r rproj-check, echo=FALSE}
 question_numeric("What is the first singular value resulting from the CA in `environmenttest.R`?",
@@ -196,5 +205,114 @@ question_numeric("What is the first singular value resulting from the CA in `env
 ## Summary
 Fantastic! If you've gotten the expected output from all of the exercises, you should have everything you need to follow along with the workshop even if there are issues connecting to the internet at the conference. This should ensure that the start of the workshop goes smoothly and that we can spend as much time as possible on the subject matter, so we and your fellow students deeply appreciate your cooperation.
 
-You already have all of the code that we will explain during the workshop, but this is considered an intermediate `R` workshop and we will not be spending time on basic `R` skills, programming or statistical theory, or navigating RStudio. If any of the concepts are unfamiliar to you, or if you're not comfortable *reading* and *running* the short code examples from this setup exercise, you can *optionally* look into the following resources before (or after!) our tutorial:
+You will get a copy of all the code that we will explain during the workshop, but this is considered an intermediate `R` workshop and we will not be spending time on basic `R` skills, programming or statistical theory, or navigating RStudio.We expect participants to have basic familiarity with data types, variables, functions, and installing/using packages in R/RStudio. It will also be helpful to know:
+- [How to store and access data in objects (aka variables, casually) is](https://datacarpentry.github.io/R-genomics/01-intro-to-R.html#creating_objects)
+- [How to use a function](https://datacarpentry.github.io/R-genomics/01-intro-to-R.html#functions)
+- What the common R [data types (logical, numeric, character)](https://datacarpentry.github.io/R-genomics/01-intro-to-R.html#vectors_and_data_types) and [structures (vector, factor, data frame, matrix)](https://datacarpentry.github.io/R-genomics/02-starting-with-data.html) are
+- [How to install and load packages](https://rladiessydney.org/courses/01-basicbasics-2)
+- [How to chain multiple functions together in a readable fashion with pipes (`|>` or `%>%`)](https://www.r-bloggers.com/2021/05/the-new-r-pipe/)
 
+If any of these concepts are unfamiliar to you, or if you're not comfortable *reading* and *running* the short code examples from this setup exercise, you can *optionally* look into the following resources before (or after!) our tutorial:
+
+
+## Part 2: R Skills Quiz
+This is a short quiz that will test your knowledge of prerequisite concepts in R that will help you get the most out of the workshop. We aren't looking at your progress, but if you get a question wrong, then you will automatically be given resources to improve your knowledge in that area.
+
+```{r saving-data, echo=FALSE}
+question("What does the R console return when you run the above code?",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```
+
+```{r reading-data, echo=FALSE}
+question("What does the R console return when you run the above code?",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```
+
+```{r function-arguments, echo=FALSE}
+question("What does the R console return when you run the above code?",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```
+
+```{r data-types, echo=FALSE}
+question("What does the R console return when you run the above code?",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```
+
+```{r factors, echo=FALSE}
+question("What does the R console return when you run the above code?",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```
+
+```{r data-frames-matrices, echo=FALSE}
+question("What does the R console return when you run the above code?",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```
+
+```{r packages, echo=FALSE}
+question("What does the R console return when you run the above code?",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```
+
+```{r loading-packages, echo=FALSE}
+question("What does the R console return when you run the above code?",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```
+
+```{r pipes, echo=FALSE}
+question("Rewrite the code `` without pipes.",
+         answer("1"),
+         answer("2"),
+         answer("3"),
+         answer("4", correct = TRUE),
+         answer("5", message = "Woah! As far as we know, R version 5 isn't available yet. Make sure you run the code exactly as we typed it. If you did, email us for help."),
+         incorrect = "You need R version 4.1.0 or newer for this tutorial. Please go to CRAN and install a new version of R.",
+         allow_retry = TRUE)
+```

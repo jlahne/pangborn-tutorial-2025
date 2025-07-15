@@ -1,20 +1,20 @@
-# Tutorial for Sensometrics 2024: “Publication-quality data visualizations using the R tidyverse”
+# Tutorial for Pangborn 2024: “Publication-quality data visualizations using the R tidyverse”
 
-This repository contains code and markdown files for the tutorial presented at Sensometrics 2024.  If you like, you can download the materials by using the "..." menu at the top right of the repository menu.  You can also see the rendered version of this material by going to the :point_right: [**workshop bookdown page**](https://lhami.github.io/sensometrics-r-tutorial-2024/) :point_left:.
+This repository contains code and markdown files for the tutorial presented at Pangborn 2025.  We are still tweaking the materials, so if you'd like to download all of the code and other files before the workshop, check back about a week before the conference.
 
 # DO THIS FIRST
 
-We have created [a quick tutorial](https://lhamilton.shinyapps.io/sensometrics2024setup/) to help you install `R`, RStudio, and to confirm that your installation is functioning for the tutorial _prior_ to Sensometrics.
+We have created [a quick tutorial](https://lhamilton.shinyapps.io/pangborn2025setup/) to help you install `R`, RStudio, and to confirm that your installation is functioning for the tutorial _prior_ to Sensometrics.
 
-Please go [to the tutorial website](https://lhamilton.shinyapps.io/sensometrics2024setup/) and follow the instructions there.  You will be guided in installing or updating your software so that, on the day of the tutorial, we can dive right into the material!
+Please go [to the tutorial website](https://lhamilton.shinyapps.io/pangborn2025setup/) and follow the instructions there.  You will be guided in installing or updating your software so that, on the day of the tutorial, we can dive right into the material!
 
 # Quick Reference
 
 If you have followed the instructions from the tutorial above, you should have all the material you need for the workshop, and your version of `R` and RStudio should be set up properly. 
 
-If you want to see code from the workshop, see [the bookdown website](https://lhami.github.io/sensometrics-r-tutorial-2024/) for all of the R code broken into individual steps alongside expected output and instructions, or [download and extract (link goes our notes on how to do this)](https://lhami.github.io/sensometrics-r-tutorial-2024/index.html#recommended-approach-for-livecoding) the [code/sensometrics-2024-code-download.zip file](https://github.com/lhami/sensometrics-r-tutorial-2024/tree/main/code) for just the lines of R code in a more compact format. Once you've extracted the files, open up RStudio or a basic Notepad program (something that makes `.txt` files) and from the File > Open menu, open the extracted `pangborn-all-code.R` file. If you double-click it from your file viewer, it will run all of the code directly in the console without giving you a chance to read anything.
+If you want to see code from the workshop, see [the bookdown website](https://jlahne.github.io/pangborn-r-tutorial-2025/) for all of the R code broken into individual steps alongside expected output and instructions, or [download and extract (link goes our notes on how to do this)](https://lhami.github.io/sensometrics-r-tutorial-2024/index.html#recommended-approach-for-livecoding) the [code/sensometrics-2024-code-download.zip file](https://github.com/lhami/sensometrics-r-tutorial-2024/tree/main/code) for just the lines of R code in a more compact format. Once you've extracted the files, open up RStudio or a basic Notepad program (something that makes `.txt` files) and from the File > Open menu, open the extracted `pangborn-all-code.R` file. If you double-click it from your file viewer, it will run all of the code directly in the console without giving you a chance to read anything.
 
-If you want detailed, written instructions, you can consult the instructions for our [tutorial last year at Pangborn 2023](https://github.com/lhami/pangborn-r-tutorial-2023), which gave detailed set up instructions for `R`, RStudio, and a very similar set of tutorials.
+If you want detailed, written instructions, you can consult the instructions for our [tutorial at Pangborn 2023](https://github.com/lhami/pangborn-r-tutorial-2023), which gave detailed set up instructions for `R`, RStudio, and a similar set of tutorials.
 
 # What this tutorial will cover
 
@@ -27,9 +27,16 @@ If you want detailed, written instructions, you can consult the instructions for
 
 The main prerequisite for this tutorial is that you [**have followed the tutorial setup instructions**](https://lhamilton.shinyapps.io/sensometrics2024setup/).
 
-We expect participants to have basic familiarity with data types, variables, functions, and installing/using packages in R/RStudio. Basic understanding of statistics is helpful but not required. In general, participants who have some experience with `R` or coding for research will have a better time. 
+We expect participants to have basic familiarity with data types, variables, functions, and installing/using packages in R/RStudio. Basic understanding of statistics is helpful but not required. In general, participants who have some experience with `R` or coding for research will have a better time.
 
-In order to cover our planned material, we will be moving relatively quickly through basic R usage and data wrangling within about 90 minutes, so we can spend the rest of the tutorial on data analysis and visualization workflows.  That's a lot to get through, so if you find that idea intimidating you might benefit from taking a look at some of the [sources below](#how-can-you-get-ahead-or-learn-more).  These range from self-paced tutorials to full how-to books.
+In order to follow along with this tutorial, you will need to know how to install, open, and run commands in R or RStudio. It will also be helpful to know:
+- [How to store and access data in objects (aka variables, casually) is](https://datacarpentry.github.io/R-genomics/01-intro-to-R.html#creating_objects)
+- [How to use a function](https://datacarpentry.github.io/R-genomics/01-intro-to-R.html#functions)
+- What the common R [data types (logical, numeric, character)](https://datacarpentry.github.io/R-genomics/01-intro-to-R.html#vectors_and_data_types) and [structures (vector, factor, data frame, matrix)](https://datacarpentry.github.io/R-genomics/02-starting-with-data.html) are
+- [How to install and load packages](https://rladiessydney.org/courses/01-basicbasics-2)
+- [How to chain multiple functions together in a readable fashion with pipes (`|>` or `%>%`)](https://www.r-bloggers.com/2021/05/the-new-r-pipe/)
+
+If you're worried about being able to follow along, you might benefit from taking a look at some of the [sources below](#how-can-you-get-ahead-or-learn-more).  These range from self-paced tutorials to full how-to books.
 
 # What we will *not* be covering:
 
@@ -38,6 +45,8 @@ In order to cover our planned material, we will be moving relatively quickly thr
 * Production programming for R
 * All possible data types
 * Basic concepts of computing, for example file storage, version control, data types and storage, etc.
+
+In order to make graphs with your own data, in addition to the skills we'll explicitly cover during this workshop, you'll need to be able to "wrangle" your initial data into a format that's ready to run your analysis. There are many ways to do this. If you already know how to reshape data in R (or how to do it in excel and then import the file), then whatever way you're already comfortable with should be great! If you have no idea where to start reformatting your data or you're frustrated with the way you've done it in the past, we personally think it's easier to learn how to wrangle data, write code, and remember what you've done later with the R tidyverse. The [updated R opus by Jacob Lahne](https://jlahne.github.io/r-opus-v2/) has a brief intro to the tidyverse in chapter 1 and many examples of data reshaping for common analyses in sensory science throughout, and the book [R for Data Science](https://r4ds.hadley.nz/) is an excellent general purpose introduction to data wrangling and data science in the R tidyverse. Both are available for free online.
 
 # How can you get ahead or learn more?
 

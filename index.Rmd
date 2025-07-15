@@ -2,14 +2,14 @@
 title: "Publication-quality data visualizations using the R tidyverse"
 author: 
   - Jacob Lahne^[Virginia Tech, jlahne@vt.edu]
-  - Leah Hamilton^[Virginia State University, lhamilton@vsu.edu]
+  - Kyle Hamilton^[Flavor Linguist, hamilton@flavorlinguist.com]
 site: "bookdown::bookdown_site"
 documentclass: book
 output:
   bookdown::gitbook: default
   #bookdown::pdf_book: default
-github-repo: lhami/sensometrics-tutorial-2024
-bibliography: sensometrics-2024.bib
+github-repo: jlahne/pangborn-tutorial-2025
+bibliography: pangborn-2025.bib
 ---
 
 # Introduction and welcome {-}
