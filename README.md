@@ -4,9 +4,9 @@ This repository contains code and markdown files for the tutorial presented at P
 
 # DO THIS FIRST
 
-We have created [a quick tutorial](https://lhamilton.shinyapps.io/pangborn2025setup/) to help you install `R`, RStudio, and to confirm that your installation is functioning for the tutorial _prior_ to Sensometrics.
+We have created [a quick tutorial](https://lhamilton.shinyapps.io/pre-tutorial-setup-2025/) to help you install `R`, RStudio, and to confirm that your installation is functioning for the tutorial _prior_ to Sensometrics.
 
-Please go [to the tutorial website](https://lhamilton.shinyapps.io/pangborn2025setup/) and follow the instructions there.  You will be guided in installing or updating your software so that, on the day of the tutorial, we can dive right into the material!
+Please go [to the tutorial website](https://lhamilton.shinyapps.io/pre-tutorial-setup-2025/) and follow the instructions there.  You will be guided in installing or updating your software so that, on the day of the tutorial, we can dive right into the material!
 
 # Quick Reference
 
@@ -25,7 +25,7 @@ If you want detailed, written instructions, you can consult the instructions for
 
 # What you should already know
 
-The main prerequisite for this tutorial is that you [**have followed the tutorial setup instructions**](https://lhamilton.shinyapps.io/sensometrics2024setup/).
+The main prerequisite for this tutorial is that you [**have followed the tutorial setup instructions**](https://lhamilton.shinyapps.io/pre-tutorial-setup-2025/).
 
 We expect participants to have basic familiarity with data types, variables, functions, and installing/using packages in R/RStudio. Basic understanding of statistics is helpful but not required. In general, participants who have some experience with `R` or coding for research will have a better time.
 

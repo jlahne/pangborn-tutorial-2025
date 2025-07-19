@@ -1,0 +1,10 @@
+name: setup
+title:
+username: lhamilton
+account: lhamilton
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 15096900
+bundleId: 10640154
+url: https://lhamilton.shinyapps.io/setup/
+version: 1
