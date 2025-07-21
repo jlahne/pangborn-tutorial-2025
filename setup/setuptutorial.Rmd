@@ -313,7 +313,7 @@ question_checkbox("These functions can save a data frame or other tabular data t
 ```{r file-names, echo=FALSE}
 question_text(htmltools::HTML("You want to save the ANOVA table in a worksheet you can open in Excel. What would you put in the blank of this function? <code>write.csv(soup_anova, \"___\")</code>"),
          answer_fn(\(x) {
-           filename <- gsub("write[\\._]csv\\(\\s*\\w*,\\s*['\"](.*\\..*)['\"]\\s*\\)","\\1", x, ignore.case = TRUE)
+           filename <- gsub("write[\\._]csv\\(\\s*\\w*,\\s*file\\s*=\\s['\"](.*\\..*)['\"]\\s*\\)","\\1", x, ignore.case = TRUE)
            if (grepl("[^/\\*\"\\\\<>:\\|\\? \\.]\\.([ct]sv|txt)$", filename, ignore.case = TRUE)) {
            correct(htmltools::HTML("Nicely done, this is a valid file name for a comma-separated file. If you want to read more about how to name and organize your files so you can find them later, you can look at <a href='https://datacarpentry.github.io/rr-organization1/01-file-naming/index.html'>this data carpentries tutorial</a>."))
           } else if (!grepl("\\.", filename)) {
