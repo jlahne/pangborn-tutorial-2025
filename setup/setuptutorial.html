@@ -126,6 +126,10 @@ ability to keep up.</li>
 tests. If you don’t yet have R and Rstudio on your laptop, it will take
 longer, depending on your internet speed and whether you need approval
 from you IT department.</p>
+<p>The optional knowledge-check questions will take around 10-20 minutes
+to answer. If you need additional help, reading through various
+resources and practicing will take longer, possibly up to a few hours,
+but you can leave and come back at any time!</p>
 </div>
 <div id="section-part-1-required-software" class="section level2">
 <h2>Part 1: Required Software</h2>
@@ -148,9 +152,9 @@ that has the following installed:</p>
 <li><strong>wesanderson</strong></li>
 </ul></li>
 <li>The tutorial materials from our <a
-href="https://github.com/jlahne/pangborn-r-tutorial-2025/">GitHub</a>.
-You can download the data we’ll use <a
-href="https://github.com/jlahne/pangborn-r-tutorial-2025/blob/main/code/pangborn-2025-code-download.zip">here
+href="https://github.com/jlahne/pangborn-tutorial-2025/">GitHub</a>. You
+can download the data we’ll use <a
+href="https://github.com/jlahne/pangborn-tutorial-2025/blob/main/code/pangborn-2025-data-download.zip">here
 now</a>, and the code files will be finalized about a week before the
 conference.</li>
 </ul>
@@ -325,7 +329,18 @@ console:</p>
 <pre><code>install.packages(c(&quot;tidyverse&quot;, &quot;tidytext&quot;, &quot;FactoMineR&quot;, &quot;ca&quot;, 
 &quot;ggrepel&quot;, &quot;ggforce&quot;, &quot;cowplot&quot;, &quot;patchwork&quot;, &quot;wesanderson&quot;))</code></pre>
 <p>Hit the enter key on your keyboard to run.</p>
-<p><img src="https://vimeo.com/203516241" /></p>
+<div class="float">
+<img src="https://www.youtube.com/watch?v=u1r5XTqrCTQ"
+alt="Installing packages with the RStudio visual interface" />
+<div class="figcaption">Installing packages with the RStudio visual
+interface</div>
+</div>
+<div class="float">
+<img src="https://www.youtube.com/watch?v=PAxmWafEacg"
+alt="Installing packages with the command line, which works in RStudio or directly in R" />
+<div class="figcaption">Installing packages with the command line, which
+works in RStudio or directly in R</div>
+</div>
 <div id="section-setup-check-r-packages" class="section level3">
 <h3>Setup check: R packages</h3>
 <p>You can use <code>?</code> in <code>R</code> to pull up help files
@@ -351,7 +366,7 @@ what all of this means yet.</p>
 <p>During the tutorial, we will be using two example sensory datasets
 for all of our plots.</p>
 <p>Download the pre-made archive of data from the <a
-href="https://github.com/jlahne/pangborn-r-tutorial-2025/blob/main/code/pangborn-2025-code-download.zip">workshop
+href="https://github.com/jlahne/pangborn-tutorial-2025/blob/main/code/pangborn-2025-data-download.zip">workshop
 github repo</a> now.</p>
 <div class="float">
 <img src="images/downloading-from-github.png" style="width:100.0%"
@@ -439,6 +454,10 @@ concepts in R that will help you get the most out of the workshop. We
 aren’t looking at your progress, but if you get a question wrong, then
 you will automatically be given resources to improve your knowledge in
 that area.</p>
+<p>Expect the quiz itself to take around 10-20 minutes. If you need
+additional help, reading through various resources and practicing will
+take longer, possibly up to a few hours, but you can leave and come back
+at any time! Our emails are open if you get stuck.</p>
 <div id="section-skills-functions-and-objects" class="section level3">
 <h3>Skills: Functions and Objects</h3>
 <p>The <code>mean()</code> function has an argument called
@@ -484,9 +503,10 @@ more information.</p>
 <script>if (Tutorial.triggerMathJax) Tutorial.triggerMathJax()</script>
 </div>
 </div>
-<p>In your working directory, you have a <code>data</code> folder that
-contains a file called <code>20250112_clt_data.csv</code>. How would you
-get the data from this file into an R data frame called
+<p>In your working directory, you have a <code>data</code> <a
+href="https://bookdown.org/m_p_sperrin/intro_to_r/getting-data-in-and-out-of-r.html"><strong>subfolder</strong></a>
+that contains a file called <code>20250112_clt_data.csv</code>. How
+would you get the data from this file into an R data frame called
 <code>clt_data</code>?</p>
 <div class="tutorial-exercise" data-label="reading-data"
 data-completion="1" data-diagnostics="1" data-startover="1"
@@ -495,7 +515,11 @@ data-lines="0" data-pipe="|&gt;">
 <script type="application/json" data-ui-opts="1">{"engine":"r","has_checker":true,"caption":"<span data-i18n=\"text.enginecap\" data-i18n-opts=\"{&quot;engine&quot;:&quot;R&quot;}\">R Code<\/span>"}</script>
 </div>
 <div id="section-reading-data-hint">
-<p><strong>Hint:</strong> Take a look at <a
+<p><strong>Hint:</strong> If you get an error that says “cannot open the
+connection”, make sure you’re reading the file from the
+<code>data</code> subfolder, not <a
+href="https://bookdown.org/m_p_sperrin/intro_to_r/getting-data-in-and-out-of-r.html">the
+working directory</a>! Take a look at <a
 href="https://www.sthda.com/english/wiki/reading-data-from-txt-csv-files-r-base-functions">this
 primer on reading in data in base R</a> or <a
 href="https://r4ds.hadley.nz/data-import.html">this primer for the
@@ -607,7 +631,7 @@ write.csv(berries_clt, "data/20200101_berries_clt.csv", row.names = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::register_http_handlers(session, metadata = list(id = "pre-tutorial-setup-2025", version = 1))
+learnr:::register_http_handlers(session, metadata = list(id = "pre-tutorial-setup-2025", version = 1.1))
 </script>
 
 
@@ -890,8 +914,8 @@ learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", lab
 <script type="application/shiny-prerendered" data-context="server">
 learnr:::question_prerendered_chunk(structure(list(type = "learnr_text", label = "file-names", question = structure("You want to save the ANOVA table in a worksheet you can open in Excel. What would you put in the blank of this function? <code>write.csv(soup_anova, \"___\")<\u002fcode>", html = TRUE, class = c("html", 
 "character")), answers = list(structure(list(id = "lnr_ans_483cc07", 
-    option = "function (x) \n{\n    if (grepl(\"[^/\\\\*\\\"\\\\\\\\<>:\\\\|\\\\? \\\\.]\\\\.([ct]sv|txt)$\", x, \n        ignore.case = TRUE)) {\n        correct(htmltools::HTML(\"Nicely done, this is a valid file name for a comma-separated file. If you want to read more about how to name and organize your files so you can find them later, you can look at <a href='https://datacarpentry.github.io/rr-organization1/01-file-naming/index.html'>this data carpentries tutorial<\u002fa>.\"))\n    }\n    else if (!grepl(\"\\\\.\", x)) {\n        incorrect(\"Make sure you include a file extension!\")\n    }\n    else if (grepl(\"\\\\.xl(s[xmb]?|[awrct])$\", x, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"If you'd like to save an excel file like an .xlsx, you'll need to use a package like <a href='https://docs.ropensci.org/writexl/'>xlsx<\u002fa> or <a href='https://docs.ropensci.org/writexl/'>writexl<\u002fa>. write.csv can only save comma-separated value files.\"))\n    }\n    else if (grepl(\"\\\\.f?o[dt]s$\", x, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"If you'd like to save an OpenDocument Spreadsheet file like a .ods, you'll need to use a package like <a href='https://github.com/ropensci/readODS/'>readODS<\u002fa>. write.csv can only save comma-separated value files.\"))\n    }\n    else if (grepl(\"\\\\.rd(a|s|ata)\", x, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"File extensions like .rds and .rdata must be used with the functions save() or saveRDS(). They're also only readable in R, not in Excel. Look at <a href='https://lhami.github.io/sensometrics-r-tutorial-2024/importing-and-wrangling-data.html#saving-your-data'>our previous workshop<\u002fa> or <a href='https://www.r-bloggers.com/2019/05/how-to-save-and-load-datasets-in-r-an-overview/'>this overview of R-specific and tabular data formats<\u002fa> if you want to know more about the pros and cons of save() and saveRDS().\"))\n    }\n    else if (grepl(\"[/\\\\*\\\"\\\\\\\\<>:\\\\|\\\\? \\\\.]\\\\.[ct]sv$\", x, \n        ignore.case = TRUE)) {\n        incorrect(\"The characters \\\\, /, |, <, >, ., \\\", ?, *, :, and space can cause problems in file names if they're right before the period indicating the file extension. Try to avoid these if possible.\")\n    }\n    else {\n        incorrect(\"We don't recognize your file extension.\")\n    }\n}", 
-    value = "function (x) \n{\n    if (grepl(\"[^/\\\\*\\\"\\\\\\\\<>:\\\\|\\\\? \\\\.]\\\\.([ct]sv|txt)$\", x, \n        ignore.case = TRUE)) {\n        correct(htmltools::HTML(\"Nicely done, this is a valid file name for a comma-separated file. If you want to read more about how to name and organize your files so you can find them later, you can look at <a href='https://datacarpentry.github.io/rr-organization1/01-file-naming/index.html'>this data carpentries tutorial<\u002fa>.\"))\n    }\n    else if (!grepl(\"\\\\.\", x)) {\n        incorrect(\"Make sure you include a file extension!\")\n    }\n    else if (grepl(\"\\\\.xl(s[xmb]?|[awrct])$\", x, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"If you'd like to save an excel file like an .xlsx, you'll need to use a package like <a href='https://docs.ropensci.org/writexl/'>xlsx<\u002fa> or <a href='https://docs.ropensci.org/writexl/'>writexl<\u002fa>. write.csv can only save comma-separated value files.\"))\n    }\n    else if (grepl(\"\\\\.f?o[dt]s$\", x, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"If you'd like to save an OpenDocument Spreadsheet file like a .ods, you'll need to use a package like <a href='https://github.com/ropensci/readODS/'>readODS<\u002fa>. write.csv can only save comma-separated value files.\"))\n    }\n    else if (grepl(\"\\\\.rd(a|s|ata)\", x, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"File extensions like .rds and .rdata must be used with the functions save() or saveRDS(). They're also only readable in R, not in Excel. Look at <a href='https://lhami.github.io/sensometrics-r-tutorial-2024/importing-and-wrangling-data.html#saving-your-data'>our previous workshop<\u002fa> or <a href='https://www.r-bloggers.com/2019/05/how-to-save-and-load-datasets-in-r-an-overview/'>this overview of R-specific and tabular data formats<\u002fa> if you want to know more about the pros and cons of save() and saveRDS().\"))\n    }\n    else if (grepl(\"[/\\\\*\\\"\\\\\\\\<>:\\\\|\\\\? \\\\.]\\\\.[ct]sv$\", x, \n        ignore.case = TRUE)) {\n        incorrect(\"The characters \\\\, /, |, <, >, ., \\\", ?, *, :, and space can cause problems in file names if they're right before the period indicating the file extension. Try to avoid these if possible.\")\n    }\n    else {\n        incorrect(\"We don't recognize your file extension.\")\n    }\n}", 
+    option = "function (x) \n{\n    filename <- gsub(\"write[\\\\._]csv\\\\(\\\\s*\\\\w*,\\\\s*['\\\"](.*\\\\..*)['\\\"]\\\\s*\\\\)\", \n        \"\\\\1\", x, ignore.case = TRUE)\n    if (grepl(\"[^/\\\\*\\\"\\\\\\\\<>:\\\\|\\\\? \\\\.]\\\\.([ct]sv|txt)$\", filename, \n        ignore.case = TRUE)) {\n        correct(htmltools::HTML(\"Nicely done, this is a valid file name for a comma-separated file. If you want to read more about how to name and organize your files so you can find them later, you can look at <a href='https://datacarpentry.github.io/rr-organization1/01-file-naming/index.html'>this data carpentries tutorial<\u002fa>.\"))\n    }\n    else if (!grepl(\"\\\\.\", filename)) {\n        incorrect(\"Make sure you include a file extension!\")\n    }\n    else if (grepl(\"\\\\.xl(s[xmb]?|[awrct])$\", filename, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"If you'd like to save an excel file like an .xlsx, you'll need to use a package like <a href='https://docs.ropensci.org/writexl/'>xlsx<\u002fa> or <a href='https://docs.ropensci.org/writexl/'>writexl<\u002fa>. write.csv can only save comma-separated value files.\"))\n    }\n    else if (grepl(\"\\\\.f?o[dt]s$\", filename, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"If you'd like to save an OpenDocument Spreadsheet file like a .ods, you'll need to use a package like <a href='https://github.com/ropensci/readODS/'>readODS<\u002fa>. write.csv can only save comma-separated value files.\"))\n    }\n    else if (grepl(\"\\\\.rd(a|s|ata)\", filename, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"File extensions like .rds and .rdata must be used with the functions save() or saveRDS(). They're also only readable in R, not in Excel. Look at <a href='https://lhami.github.io/sensometrics-r-tutorial-2024/importing-and-wrangling-data.html#saving-your-data'>our previous workshop<\u002fa> or <a href='https://www.r-bloggers.com/2019/05/how-to-save-and-load-datasets-in-r-an-overview/'>this overview of R-specific and tabular data formats<\u002fa> if you want to know more about the pros and cons of save() and saveRDS().\"))\n    }\n    else if (grepl(\"[/\\\\*\\\"\\\\\\\\<>:\\\\|\\\\? \\\\.]\\\\.[ct]sv$\", filename, \n        ignore.case = TRUE)) {\n        incorrect(\"The characters \\\\, /, |, <, >, ., \\\", ?, *, :, and space can cause problems in file names if they're right before the period indicating the file extension. Try to avoid these if possible.\")\n    }\n    else {\n        incorrect(\"We don't recognize your file extension.\")\n    }\n}", 
+    value = "function (x) \n{\n    filename <- gsub(\"write[\\\\._]csv\\\\(\\\\s*\\\\w*,\\\\s*['\\\"](.*\\\\..*)['\\\"]\\\\s*\\\\)\", \n        \"\\\\1\", x, ignore.case = TRUE)\n    if (grepl(\"[^/\\\\*\\\"\\\\\\\\<>:\\\\|\\\\? \\\\.]\\\\.([ct]sv|txt)$\", filename, \n        ignore.case = TRUE)) {\n        correct(htmltools::HTML(\"Nicely done, this is a valid file name for a comma-separated file. If you want to read more about how to name and organize your files so you can find them later, you can look at <a href='https://datacarpentry.github.io/rr-organization1/01-file-naming/index.html'>this data carpentries tutorial<\u002fa>.\"))\n    }\n    else if (!grepl(\"\\\\.\", filename)) {\n        incorrect(\"Make sure you include a file extension!\")\n    }\n    else if (grepl(\"\\\\.xl(s[xmb]?|[awrct])$\", filename, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"If you'd like to save an excel file like an .xlsx, you'll need to use a package like <a href='https://docs.ropensci.org/writexl/'>xlsx<\u002fa> or <a href='https://docs.ropensci.org/writexl/'>writexl<\u002fa>. write.csv can only save comma-separated value files.\"))\n    }\n    else if (grepl(\"\\\\.f?o[dt]s$\", filename, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"If you'd like to save an OpenDocument Spreadsheet file like a .ods, you'll need to use a package like <a href='https://github.com/ropensci/readODS/'>readODS<\u002fa>. write.csv can only save comma-separated value files.\"))\n    }\n    else if (grepl(\"\\\\.rd(a|s|ata)\", filename, ignore.case = TRUE)) {\n        incorrect(htmltools::HTML(\"File extensions like .rds and .rdata must be used with the functions save() or saveRDS(). They're also only readable in R, not in Excel. Look at <a href='https://lhami.github.io/sensometrics-r-tutorial-2024/importing-and-wrangling-data.html#saving-your-data'>our previous workshop<\u002fa> or <a href='https://www.r-bloggers.com/2019/05/how-to-save-and-load-datasets-in-r-an-overview/'>this overview of R-specific and tabular data formats<\u002fa> if you want to know more about the pros and cons of save() and saveRDS().\"))\n    }\n    else if (grepl(\"[/\\\\*\\\"\\\\\\\\<>:\\\\|\\\\? \\\\.]\\\\.[ct]sv$\", filename, \n        ignore.case = TRUE)) {\n        incorrect(\"The characters \\\\, /, |, <, >, ., \\\", ?, *, :, and space can cause problems in file names if they're right before the period indicating the file extension. Try to avoid these if possible.\")\n    }\n    else {\n        incorrect(\"We don't recognize your file extension.\")\n    }\n}", 
     label = NULL, correct = NULL, message = NULL, type = "function"), class = c("tutorial_question_answer", 
 "tutorial_quiz_answer"))), button_labels = list(submit = structure("<span data-i18n=\"button.questionsubmit\">Submit Answer<\u002fspan>", html = TRUE, class = c("html", 
 "character")), try_again = structure("<span data-i18n=\"button.questiontryagain\">Try Again<\u002fspan>", html = TRUE, class = c("html", 
@@ -1200,7 +1224,8 @@ learnr:::store_exercise_cache(structure(list(label = "pipes", global_setup = str
             opts = list(label = "\"pipes\"", exercise = "TRUE"), 
             engine = "r")), code_check = NULL, error_check = NULL, 
     check = structure(c("grade_this({", "  fail_if(grepl(\"(%>%|\\\\|>)\",.user_code), \"Please rewrite your code so it has no pipes (%>% or |>)\")", 
-    "  fail_if_code_feedback()", "  pass(message = htmltools::HTML(\"Great job! You've just done exactly what R usually does to your pipes behind the scenes. Hopefully you now understand what pipes do even if you've never used them before.<br /><br />We'll be using pipes extensively in the workshop to help with the readability of our code, so if you're still feeling confused, you can look at <a href='https://magrittr.tidyverse.org/'>this overview from the <code>magrittr<\u002fcode> package<\u002fa> or <a href='https://r4ds.hadley.nz/workflow-style.html#sec-pipes'>this overview from the <cite>R for Data Science<\u002fcite> book<\u002fa>. The pipes these two guides use <em>look<\u002fem> different, but <a href='https://www.r-bloggers.com/2021/05/the-new-r-pipe/'>they act <em>mostly<\u002fem> the same<\u002fa>. Just pick one and stick with it.\"))", 
+    "  pass_if(.result == .solution, message = htmltools::HTML(\"Great job! You've just done exactly what R usually does to your pipes behind the scenes. Hopefully you now understand what pipes do even if you've never used them before.<br /><br />We'll be using pipes extensively in the workshop to help with the readability of our code, so if you're still feeling confused, you can look at <a href='https://magrittr.tidyverse.org/'>this overview from the <code>magrittr<\u002fcode> package<\u002fa> or <a href='https://r4ds.hadley.nz/workflow-style.html#sec-pipes'>this overview from the <cite>R for Data Science<\u002fcite> book<\u002fa>. The pipes these two guides use <em>look<\u002fem> different, but <a href='https://www.r-bloggers.com/2021/05/the-new-r-pipe/'>they act <em>mostly<\u002fem> the same<\u002fa>. Just pick one and stick with it.\"))", 
+    "  fail(message = htmltools::HTML(\"Remember, the pipe (<code>%&gt;%<\u002fcode>) puts whatever's on the left into the very first argument of the function on the right. So <code>x %&gt;% mean(0, TRUE)<\u002fcode> becomes <code>mean(x, 0, TRUE)<\u002fcode>. You can look at <a href='https://magrittr.tidyverse.org/'>this overview from the <code>magrittr<\u002fcode> package<\u002fa> or <a href='https://r4ds.hadley.nz/workflow-style.html#sec-pipes'>this overview from the <cite>R for Data Science<\u002fcite> book<\u002fa>. The pipes these two guides use <em>look<\u002fem> different, but <a href='https://www.r-bloggers.com/2021/05/the-new-r-pipe/'>they act <em>mostly<\u002fem> the same<\u002fa>.\"))", 
     "  })"), chunk_opts = list(label = "pipes-check")), solution = structure("round(pull(summarize(read.csv(\"data/20200101_berries_clt.csv\"), correlation = cor(Liking, Sweetness)), correlation), 2)", chunk_opts = list(
         label = "pipes-solution", exercise.reveal_solution = FALSE)), 
     tests = NULL, options = list(eval = FALSE, echo = TRUE, results = "markup", 

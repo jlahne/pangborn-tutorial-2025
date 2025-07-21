@@ -2,7 +2,7 @@
 title: "Pre-Tutorial Setup for 'Publication-quality data visualizations using the R tidyverse'"
 tutorial:
   id: "pre-tutorial-setup-2025"
-  version: 1.0
+  version: 1.1
 output: 
   learnr::tutorial:
     progressive: true
@@ -52,6 +52,8 @@ This step-by-step walkthrough has two parts:
 2. An **optional** series of exercises testing basic R knowledge like data types and using functions, which includes links to external resources. We recommend this for anyone nervous about their ability to keep up.
 
 The first portion will take about 15 minutes to read and run the tests. If you don't yet have R and Rstudio on your laptop, it will take longer, depending on your internet speed and whether you need approval from you IT department.
+
+The optional knowledge-check questions will take around 10-20 minutes to answer. If you need additional help, reading through various resources and practicing will take longer, possibly up to a few hours, but you can leave and come back at any time!
 
 ## Part 1: Required Software
 
@@ -181,7 +183,11 @@ install.packages(c("tidyverse", "tidytext", "FactoMineR", "ca",
 
 Hit the enter key on your keyboard to run.
 
-![](https://vimeo.com/203516241)
+If you have any issues or need more instructions, try watching one of these videos:
+
+![Installing packages with the RStudio visual interface](https://www.youtube.com/watch?v=u1r5XTqrCTQ)
+
+![Installing packages with the command line, which works in RStudio or directly in R](https://www.youtube.com/watch?v=PAxmWafEacg)
 
 ### Setup check: R packages
 You can use `?` in `R` to pull up help files for any function in a package you have installed. Use the following code to read the help file for the function `geom_text_repel()` from the package `ggrepel`:
@@ -249,6 +255,8 @@ If any of these concepts are unfamiliar to you, or if you're not comfortable **r
 ## Part 2: R Skills Quiz
 This is a short quiz that will test your knowledge of prerequisite concepts in R that will help you get the most out of the workshop. We aren't looking at your progress, but if you get a question wrong, then you will automatically be given resources to improve your knowledge in that area.
 
+Expect the quiz itself to take around 10-20 minutes. If you need additional help, reading through various resources and practicing will take longer, possibly up to a few hours, but you can leave and come back at any time! Our emails are open if you get stuck.
+
 ### Skills: Functions and Objects
 
 The `mean()` function has an argument called `na.rm`, which is necessary if you want to find the average of a dataset with missing values. 
@@ -304,17 +312,19 @@ question_checkbox("These functions can save a data frame or other tabular data t
 
 ```{r file-names, echo=FALSE}
 question_text(htmltools::HTML("You want to save the ANOVA table in a worksheet you can open in Excel. What would you put in the blank of this function? <code>write.csv(soup_anova, \"___\")</code>"),
-         answer_fn(\(x) {if (grepl("[^/\\*\"\\\\<>:\\|\\? \\.]\\.([ct]sv|txt)$", x, ignore.case = TRUE)) {
+         answer_fn(\(x) {
+           filename <- gsub("write[\\._]csv\\(\\s*\\w*,\\s*['\"](.*\\..*)['\"]\\s*\\)","\\1", x, ignore.case = TRUE)
+           if (grepl("[^/\\*\"\\\\<>:\\|\\? \\.]\\.([ct]sv|txt)$", filename, ignore.case = TRUE)) {
            correct(htmltools::HTML("Nicely done, this is a valid file name for a comma-separated file. If you want to read more about how to name and organize your files so you can find them later, you can look at <a href='https://datacarpentry.github.io/rr-organization1/01-file-naming/index.html'>this data carpentries tutorial</a>."))
-          } else if (!grepl("\\.", x)) {
+          } else if (!grepl("\\.", filename)) {
             incorrect("Make sure you include a file extension!")
-          } else if (grepl("\\.xl(s[xmb]?|[awrct])$", x, ignore.case = TRUE)) {
+          } else if (grepl("\\.xl(s[xmb]?|[awrct])$", filename, ignore.case = TRUE)) {
             incorrect(htmltools::HTML("If you'd like to save an excel file like an .xlsx, you'll need to use a package like <a href='https://docs.ropensci.org/writexl/'>xlsx</a> or <a href='https://docs.ropensci.org/writexl/'>writexl</a>. write.csv can only save comma-separated value files."))
-          } else if (grepl("\\.f?o[dt]s$", x, ignore.case = TRUE)) {
+          } else if (grepl("\\.f?o[dt]s$", filename, ignore.case = TRUE)) {
             incorrect(htmltools::HTML("If you'd like to save an OpenDocument Spreadsheet file like a .ods, you'll need to use a package like <a href='https://github.com/ropensci/readODS/'>readODS</a>. write.csv can only save comma-separated value files."))
-          } else if (grepl("\\.rd(a|s|ata)", x, ignore.case = TRUE)) {
+          } else if (grepl("\\.rd(a|s|ata)", filename, ignore.case = TRUE)) {
             incorrect(htmltools::HTML("File extensions like .rds and .rdata must be used with the functions save() or saveRDS(). They're also only readable in R, not in Excel. Look at <a href='https://lhami.github.io/sensometrics-r-tutorial-2024/importing-and-wrangling-data.html#saving-your-data'>our previous workshop</a> or <a href='https://www.r-bloggers.com/2019/05/how-to-save-and-load-datasets-in-r-an-overview/'>this overview of R-specific and tabular data formats</a> if you want to know more about the pros and cons of save() and saveRDS()."))
-          } else if (grepl("[/\\*\"\\\\<>:\\|\\? \\.]\\.[ct]sv$", x, ignore.case = TRUE)) {
+          } else if (grepl("[/\\*\"\\\\<>:\\|\\? \\.]\\.[ct]sv$", filename, ignore.case = TRUE)) {
             incorrect("The characters \\, /, |, <, >, ., \", ?, *, :, and space can cause problems in file names if they're right before the period indicating the file extension. Try to avoid these if possible.")
           } else {
             incorrect("We don't recognize your file extension.")
@@ -322,14 +332,14 @@ question_text(htmltools::HTML("You want to save the ANOVA table in a worksheet y
          allow_retry = TRUE)
 ```
 
-In your working directory, you have a `data` folder that contains a file called `20250112_clt_data.csv`. How would you get the data from this file into an R data frame called `clt_data`?
+In your working directory, you have a `data` [**subfolder**](https://bookdown.org/m_p_sperrin/intro_to_r/getting-data-in-and-out-of-r.html) that contains a file called `20250112_clt_data.csv`. How would you get the data from this file into an R data frame called `clt_data`?
 
 ```{r reading-data, exercise = TRUE}
 clt_data
 ```
 
 <div id="reading-data-hint">
-**Hint:** Take a look at [this primer on reading in data in base R](https://www.sthda.com/english/wiki/reading-data-from-txt-csv-files-r-base-functions) or [this primer for the tidyverse](https://r4ds.hadley.nz/data-import.html). If you want to use the tidyverse functions, don't forget to load the packages with `library()`!
+**Hint:** If you get an error that says "cannot open the connection", make sure you're reading the file from the `data` subfolder, not [the working directory](https://bookdown.org/m_p_sperrin/intro_to_r/getting-data-in-and-out-of-r.html)! Take a look at [this primer on reading in data in base R](https://www.sthda.com/english/wiki/reading-data-from-txt-csv-files-r-base-functions) or [this primer for the tidyverse](https://r4ds.hadley.nz/data-import.html). If you want to use the tidyverse functions, don't forget to load the packages with `library()`!
 </div>
 
 ```{r reading-data-check}
@@ -432,8 +442,8 @@ read.csv("data/20200101_berries_clt.csv") %>%
 ```{r pipes-check}
 grade_this({
   fail_if(grepl("(%>%|\\|>)",.user_code), "Please rewrite your code so it has no pipes (%>% or |>)")
-  fail_if_code_feedback()
-  pass(message = htmltools::HTML("Great job! You've just done exactly what R usually does to your pipes behind the scenes. Hopefully you now understand what pipes do even if you've never used them before.<br /><br />We'll be using pipes extensively in the workshop to help with the readability of our code, so if you're still feeling confused, you can look at <a href='https://magrittr.tidyverse.org/'>this overview from the <code>magrittr</code> package</a> or <a href='https://r4ds.hadley.nz/workflow-style.html#sec-pipes'>this overview from the <cite>R for Data Science</cite> book</a>. The pipes these two guides use <em>look</em> different, but <a href='https://www.r-bloggers.com/2021/05/the-new-r-pipe/'>they act <em>mostly</em> the same</a>. Just pick one and stick with it."))
+  pass_if(.result == .solution, message = htmltools::HTML("Great job! You've just done exactly what R usually does to your pipes behind the scenes. Hopefully you now understand what pipes do even if you've never used them before.<br /><br />We'll be using pipes extensively in the workshop to help with the readability of our code, so if you're still feeling confused, you can look at <a href='https://magrittr.tidyverse.org/'>this overview from the <code>magrittr</code> package</a> or <a href='https://r4ds.hadley.nz/workflow-style.html#sec-pipes'>this overview from the <cite>R for Data Science</cite> book</a>. The pipes these two guides use <em>look</em> different, but <a href='https://www.r-bloggers.com/2021/05/the-new-r-pipe/'>they act <em>mostly</em> the same</a>. Just pick one and stick with it."))
+  fail(message = htmltools::HTML("Remember, the pipe (<code>%&gt;%</code>) puts whatever's on the left into the very first argument of the function on the right. So <code>x %&gt;% mean(0, TRUE)</code> becomes <code>mean(x, 0, TRUE)</code>. You can look at <a href='https://magrittr.tidyverse.org/'>this overview from the <code>magrittr</code> package</a> or <a href='https://r4ds.hadley.nz/workflow-style.html#sec-pipes'>this overview from the <cite>R for Data Science</cite> book</a>. The pipes these two guides use <em>look</em> different, but <a href='https://www.r-bloggers.com/2021/05/the-new-r-pipe/'>they act <em>mostly</em> the same</a>."))
   })
 ```
 
