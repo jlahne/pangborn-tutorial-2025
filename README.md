@@ -1,4 +1,4 @@
-# Tutorial for Pangborn 2024: “Publication-quality data visualizations using the R tidyverse”
+# Tutorial for Pangborn 2025: “Publication-quality data visualizations using the R tidyverse”
 
 This repository contains code and markdown files for the tutorial presented at Pangborn 2025.  We are still tweaking the materials, so if you'd like to download all of the code and other files before the workshop, check back about a week before the conference.
 
