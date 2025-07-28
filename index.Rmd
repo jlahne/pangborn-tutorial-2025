@@ -36,9 +36,8 @@ This workshop is going to be conducted not using slides, but through **livecodin
 
 ## Introductions {-}
 
-### Leah Hamilton, PhD {-}
-
-Leah Hamilton is an Assistant Professor of Sensory & Flavor Science at Virginia State University, in the US. Her primary research interest is flavor language, including the ways that people talk about flavors using their own words in different contexts. In her new position at Virginia State University, she'll be working closely with plant breeders and agricultural scientists to develop sensory-driven specialty crops and support the work of small and underprivileged farmers in the mid-Atlantic US.
+### Kyle Hamilton, PhD {-}
+Kyle Hamilton is the Lead Sensory Data Analyst and Trainer at Flavor Linguist, LLC, in the US. Kyle's primary research interest is flavor language, including the ways that people talk about flavors using their own words in different contexts. [Flavor Linguist](https://flavorlinguist.com) offers data analysis services for language and survey data, or training and support for those looking to do it themselves.
 
 ### Jacob Lahne, PhD {-}
 

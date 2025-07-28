@@ -150,7 +150,7 @@ ca_cider_coords %>%
 
 ### Using `theme_*()` to change visual options quickly
 
-In the last several plots, notice that we are using the default (and to my mind unattractive) grey background of `ggplot2`.  If this tutorial had a single goal, it would be to eliminate this theme from published papers.  It looks *bad*.
+In the last several plots, notice that we are using the default (and to my mind unattractive) grey background of `ggplot2`.  If this tutorial had a single goal, it would be to eliminate this theme from published papers.  It looks *bad* (and tends to reduce contrast).
 
 ```{r adding a different theme}
 ca_cider_coords %>%
@@ -187,7 +187,7 @@ ca_cider_coords %>%
         legend.position = "bottom")
 ```
 
-Most of the use of `theme()` involves functions names as `element_*()`.  When we remove elements, for example, we use `element_blank()` (not, for example, `NA` or `NULL` as we typically would in other parts of `R`).
+Many calls to `theme()` involve `element_*()` functions.  When we remove elements, for example, we use `element_blank()` (not, for example, `NA` or `NULL` as we typically would in other parts of `R`).
 
 When we want to change how our text is formatted (not the values, but the formatting), we use `element_text()` calls.
 
@@ -226,7 +226,7 @@ Finally, say we didn't like the default color set for the points.
 
 How can we manipulate the colors that are plotted?  The **way in which** mapped, aesthetic variables are assigned to visual elements is controlled by the `scale_*()` functions.  
 
-In my experience, the most frequently encountered scales are those for color: either `scale_fill_*()` for solid objects (like the bars in a histogram) or `scale_color_*()` for lines and points (like the outlines of the histogram bars).  
+In my experience, the most frequently encountered scales are those for color: either `scale_fill_*()` for solid objects (like the bars in a histogram) or `scale_color_*()` for lines and points (like the outlines of the histogram bars, or the points and letters in our scatterplots so far).  
 
 Scale functions work by telling `ggplot()` *how* to map aesthetic variables to visual elements.  You may have noticed that I added a `scale_color_manual()` function to the end of several plots above.  This function lets me manually specify the colors that are assigned to each colored element.
 
