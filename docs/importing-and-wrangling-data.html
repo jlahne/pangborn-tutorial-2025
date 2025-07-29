@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>1 Importing and wrangling data | Publication-quality data visualizations using the R tidyverse</title>
+  <meta name="description" content="1 Importing and wrangling data | Publication-quality data visualizations using the R tidyverse" />
+  <meta name="generator" content="bookdown 0.43 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="1 Importing and wrangling data | Publication-quality data visualizations using the R tidyverse" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta name="github-repo" content="jlahne/pangborn-tutorial-2025" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="1 Importing and wrangling data | Publication-quality data visualizations using the R tidyverse" />
+  
+  
+  
+
+<meta name="author" content="Jacob Lahne" />
+<meta name="author" content="Kyle Hamilton" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="index.html"/>
+<link rel="next" href="the-basics-of-plotting-with-ggplot2.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Introduction and welcome</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#introductions"><i class="fa fa-check"></i>Introductions</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#kyle-hamilton-phd"><i class="fa fa-check"></i>Kyle Hamilton, PhD</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#jacob-lahne-phd"><i class="fa fa-check"></i>Jacob Lahne, PhD</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#elizabeth-clark-phd"><i class="fa fa-check"></i>Elizabeth Clark, PhD</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#todays-agenda"><i class="fa fa-check"></i>Today’s agenda</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#how-were-going-to-run"><i class="fa fa-check"></i>How we’re going to run</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#recommended-approach-for-livecoding"><i class="fa fa-check"></i>Recommended approach for livecoding</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#dealing-with-errors"><i class="fa fa-check"></i>Dealing with errors</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#psa-not-knowing-is-normal"><i class="fa fa-check"></i>PSA: not-knowing is normal!</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#getting-help"><i class="fa fa-check"></i>Getting Help</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="1" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html"><i class="fa fa-check"></i><b>1</b> Importing and wrangling data</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#motivation-exploring-berry-and-cider-cataliking-data"><i class="fa fa-check"></i><b>1.1</b> Motivation: exploring berry and cider CATA/liking data</a></li>
+<li class="chapter" data-level="1.2" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#getting-data-into-r"><i class="fa fa-check"></i><b>1.2</b> Getting data into <code>R</code></a>
+<ul>
+<li class="chapter" data-level="1.2.1" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#where-the-data-live"><i class="fa fa-check"></i><b>1.2.1</b> Where the data live</a></li>
+</ul></li>
+<li class="chapter" data-level="1.3" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#the-destination"><i class="fa fa-check"></i><b>1.3</b> The destination</a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#cider"><i class="fa fa-check"></i><b>1.3.1</b> Cider</a></li>
+<li class="chapter" data-level="1.3.2" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#berries"><i class="fa fa-check"></i><b>1.3.2</b> Berries</a></li>
+<li class="chapter" data-level="1.3.3" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#publication-quality"><i class="fa fa-check"></i><b>1.3.3</b> “Publication quality”</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#saving-your-data"><i class="fa fa-check"></i><b>1.4</b> Saving your data</a>
+<ul>
+<li class="chapter" data-level="1.4.1" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#a-note-on-replicability"><i class="fa fa-check"></i><b>1.4.1</b> A note on replicability</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="importing-and-wrangling-data.html"><a href="importing-and-wrangling-data.html#wrap-up"><i class="fa fa-check"></i><b>1.5</b> Wrap up</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html"><i class="fa fa-check"></i><b>2</b> The basics of plotting with <code>ggplot2</code></a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html#your-first-ggplot"><i class="fa fa-check"></i><b>2.1</b> Your first <code>ggplot()</code></a></li>
+<li class="chapter" data-level="2.2" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html#the-aes-function-and-mapping-argument"><i class="fa fa-check"></i><b>2.2</b> The <code>aes()</code> function and <code>mapping =</code> argument</a></li>
+<li class="chapter" data-level="2.3" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html#adding-layers-with-geom_-functions"><i class="fa fa-check"></i><b>2.3</b> Adding layers with <code>geom_*()</code> functions</a></li>
+<li class="chapter" data-level="2.4" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html#arguments-inside-and-outside-of-aes"><i class="fa fa-check"></i><b>2.4</b> Arguments inside and outside of <code>aes()</code></a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html#using-theme_-to-change-visual-options-quickly"><i class="fa fa-check"></i><b>2.4.1</b> Using <code>theme_*()</code> to change visual options quickly</a></li>
+<li class="chapter" data-level="2.4.2" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html#changing-aesthetic-elements-with-scale_-functions"><i class="fa fa-check"></i><b>2.4.2</b> Changing aesthetic elements with <code>scale_*()</code> functions</a></li>
+<li class="chapter" data-level="2.4.3" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html#finally-facet_"><i class="fa fa-check"></i><b>2.4.3</b> Finally, <code>facet_*()</code></a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="the-basics-of-plotting-with-ggplot2.html"><a href="the-basics-of-plotting-with-ggplot2.html#some-further-reading"><i class="fa fa-check"></i><b>2.5</b> Some further reading</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html"><i class="fa fa-check"></i><b>3</b> Fine-Tuning Publication-Quality ggplots</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#exporting-and-saving-plots"><i class="fa fa-check"></i><b>3.1</b> Exporting and Saving Plots</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#what-format"><i class="fa fa-check"></i><b>3.1.1</b> What format?</a></li>
+<li class="chapter" data-level="3.1.2" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#ggsave"><i class="fa fa-check"></i><b>3.1.2</b> Exporting Images with <code>ggsave()</code></a></li>
+<li class="chapter" data-level="3.1.3" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#other-image-export-options"><i class="fa fa-check"></i><b>3.1.3</b> Other Image Export Options</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#making-text-look-okay"><i class="fa fa-check"></i><b>3.2</b> Making Text Look Okay</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#powerful-text-manipulation-with-stringr"><i class="fa fa-check"></i><b>3.2.1</b> Powerful Text Manipulation with <code>stringr</code></a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#removing-legends-and-plot-elements"><i class="fa fa-check"></i><b>3.3</b> Removing Legends and Plot Elements</a></li>
+<li class="chapter" data-level="3.4" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#ordered-categorical-variables"><i class="fa fa-check"></i><b>3.4</b> Ordered Categorical Variables</a>
+<ul>
+<li class="chapter" data-level="3.4.1" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#specifying-ordinal-variables-as-factors"><i class="fa fa-check"></i><b>3.4.1</b> Specifying Ordinal Variables as Factors</a></li>
+<li class="chapter" data-level="3.4.2" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#facets-with-different-category-orders"><i class="fa fa-check"></i><b>3.4.2</b> Facets with Different Category-Orders</a></li>
+</ul></li>
+<li class="chapter" data-level="3.5" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#putting-it-all-together"><i class="fa fa-check"></i><b>3.5</b> Putting it all together</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="using-ggplot-with-other-packages.html"><a href="using-ggplot-with-other-packages.html"><i class="fa fa-check"></i><b>4</b> Using ggplot with Other Packages</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="using-ggplot-with-other-packages.html"><a href="using-ggplot-with-other-packages.html#data-for-the-rest-of-the-tutorial"><i class="fa fa-check"></i><b>4.1</b> Data for the rest of the tutorial</a></li>
+<li class="chapter" data-level="4.2" data-path="using-ggplot-with-other-packages.html"><a href="using-ggplot-with-other-packages.html#new-geom_s-and-stat_s"><i class="fa fa-check"></i><b>4.2</b> New <code>geom_*()s</code> and <code>stat_*()</code>s</a></li>
+<li class="chapter" data-level="4.3" data-path="using-ggplot-with-other-packages.html"><a href="using-ggplot-with-other-packages.html#new-theme_s-and-scale_s"><i class="fa fa-check"></i><b>4.3</b> New <code>theme_*()</code>s and <code>scale_*()</code>s</a></li>
+<li class="chapter" data-level="4.4" data-path="using-ggplot-with-other-packages.html"><a href="using-ggplot-with-other-packages.html#modifying-ggplots-made-by-other-packages"><i class="fa fa-check"></i><b>4.4</b> Modifying <code>ggplot()</code>s made by other packages</a></li>
+<li class="chapter" data-level="4.5" data-path="using-ggplot-with-other-packages.html"><a href="using-ggplot-with-other-packages.html#combining-plots"><i class="fa fa-check"></i><b>4.5</b> Combining Plots</a></li>
+<li class="chapter" data-level="4.6" data-path="using-ggplot-with-other-packages.html"><a href="using-ggplot-with-other-packages.html#finding-new-packages"><i class="fa fa-check"></i><b>4.6</b> Finding New Packages</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="wrap-up-and-further-resources.html"><a href="wrap-up-and-further-resources.html"><i class="fa fa-check"></i><b>5</b> Wrap-up and further resources</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="wrap-up-and-further-resources.html"><a href="wrap-up-and-further-resources.html#getting-help-1"><i class="fa fa-check"></i><b>5.1</b> Getting help</a></li>
+<li class="chapter" data-level="5.2" data-path="wrap-up-and-further-resources.html"><a href="wrap-up-and-further-resources.html#further-readingresources"><i class="fa fa-check"></i><b>5.2</b> Further reading/resources</a></li>
+<li class="chapter" data-level="5.3" data-path="wrap-up-and-further-resources.html"><a href="wrap-up-and-further-resources.html#questionscomments"><i class="fa fa-check"></i><b>5.3</b> Questions/Comments</a></li>
+<li class="chapter" data-level="5.4" data-path="wrap-up-and-further-resources.html"><a href="wrap-up-and-further-resources.html#references"><i class="fa fa-check"></i><b>5.4</b> References</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="appendix.html"><a href="appendix.html"><i class="fa fa-check"></i>Appendix</a>
+<ul>
+<li class="chapter" data-level="" data-path="appendix.html"><a href="appendix.html#ggresolution"><i class="fa fa-check"></i>Image Sizes and Raster Resolutions</a>
+<ul>
+<li class="chapter" data-level="" data-path="appendix.html"><a href="appendix.html#simpler-sizing-vector-images"><i class="fa fa-check"></i>Simpler Sizing: Vector Images</a></li>
+<li class="chapter" data-level="" data-path="appendix.html"><a href="appendix.html#raster-image-resolutions"><i class="fa fa-check"></i>Raster Image Resolutions</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="appendix.html"><a href="appendix.html#regex"><i class="fa fa-check"></i>Regular Expressions</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Publication-quality data visualizations using the R tidyverse</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="importing-and-wrangling-data" class="section level1 hasAnchor" number="1">
+<h1><span class="header-section-number">1</span> Importing and wrangling data<a href="importing-and-wrangling-data.html#importing-and-wrangling-data" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>Now that everyone is on the same page for how we’re going to use <code>R</code>, we’re going to dive right into importing our data into <code>R</code>, exploring it, and–most importantly–visualizing it. In this part of the tutorial, we are going to focus on getting data into <code>R</code> and manipulating it.<br />
+Personally, I prefer to see the reason for doing something, rather than being shown a bunch of building blocks and not seeing how they fit together. Therefore, we’re going to start off this section with a complete work flow for importing and visualizing some real results, and then work backward as we unpack how and why we’ve taken particular steps.</p>
+<div id="motivation-exploring-berry-and-cider-cataliking-data" class="section level2 hasAnchor" number="1.1">
+<h2><span class="header-section-number">1.1</span> Motivation: exploring berry and cider CATA/liking data<a href="importing-and-wrangling-data.html#motivation-exploring-berry-and-cider-cataliking-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Before we begin, we need to make sure we’ve loaded the packages we’re going to use.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="importing-and-wrangling-data.html#cb3-1" tabindex="-1"></a><span class="co"># This package is actually a set of utility packages we will use a lot</span></span>
+<span id="cb3-2"><a href="importing-and-wrangling-data.html#cb3-2" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div>
+</div>
+<div id="getting-data-into-r" class="section level2 hasAnchor" number="1.2">
+<h2><span class="header-section-number">1.2</span> Getting data into <code>R</code><a href="importing-and-wrangling-data.html#getting-data-into-r" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Before we’re able to analyze anything, we need to get data into <code>R</code>. In the workshop archive you downloaded, the <code>data/</code> directory has files called <code>clt-berry-data.csv</code> and <code>CiderDryness_SensoryDATA.csv</code>. These are the files that hold the raw data.</p>
+<div id="where-the-data-live" class="section level3 hasAnchor" number="1.2.1">
+<h3><span class="header-section-number">1.2.1</span> Where the data live<a href="importing-and-wrangling-data.html#where-the-data-live" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>To get these data into <code>R</code>, we need to briefly talk about <strong>working directories</strong> because this is how <code>R</code> “sees” your computer. It will look first in the working directory, and then you will have to tell it where the file is <em>relative</em> to that directory. If you have been following along and opened up the <code>.Rproj</code> file in the downloaded archive, your working directory should be the archive’s top level, which will mean that we only need to point <code>R</code> towards the <code>data/</code> folder and then the <code>clt-berry-data.csv</code> file. We can check the working directory with the <code>getwd()</code> function.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="importing-and-wrangling-data.html#cb4-1" tabindex="-1"></a><span class="fu">getwd</span>()</span></code></pre></div>
+<pre><code>## [1] &quot;/Users/jake/Library/CloudStorage/Dropbox/Work/Collaborations/2025/pangborn-tutorial-2025&quot;</code></pre>
+<p>Therefore, <strong>relative to the working directory</strong>, the file path to this data is <code>data/clt-berry-data.csv</code>. Please note that this is the UNIX convention for file paths: in Windows, the backslash <code>\</code> is used to separate directories. Happily, RStudio will translate between the two conventions, so you can just follow along with the macOS/UNIX convention (<code>/</code>) in this workshop.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="importing-and-wrangling-data.html#cb6-1" tabindex="-1"></a>raw_berry_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="at">file =</span> <span class="st">&quot;data/clt-berry-data.csv&quot;</span>)</span>
+<span id="cb6-2"><a href="importing-and-wrangling-data.html#cb6-2" tabindex="-1"></a>raw_cider_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="at">file =</span> <span class="st">&quot;data/CiderDryness_SensoryDATA.csv&quot;</span>)</span></code></pre></div>
+<p>As a note, in many countries the separator (delimiter) will be the semi-colon (<code>;</code>), since the comma is used as the decimal marker. To read files formatted this way, you can use the <code>read_csv2()</code> function. If you encounter tab-separated values files (<code>.tsv</code>) you can use the <code>read_tsv()</code> function. If you have more non-standard delimiters, you can use the <code>read_delim()</code> function, which will allow you to specify your own delimiter characters. Excel stores data by default in the <code>.xlsx</code> format, which can be read by installing and using the <code>readxl</code> package (or saving Excel data as <code>.csv</code>). You can also read many other formats of tabular data using the <code>rio</code> package (“read input/output”), which can be installed from CRAN (using, as you have learned, <code>install.packages("rio")</code>).</p>
+<p>The <code>read_csv()</code> function creates a type of object in <code>R</code> called a <code>tibble</code>, which is a special type of <code>data.frame</code>. These are rectangular “spreadsheet-like” objects like you would encounter in Excel or manipulate in JMP or SPSS.</p>
+</div>
+</div>
+<div id="the-destination" class="section level2 hasAnchor" number="1.3">
+<h2><span class="header-section-number">1.3</span> The destination<a href="importing-and-wrangling-data.html#the-destination" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The plan here is to present “full” workflows for data import, wrangling, and visualization below so as to give a skeleton to work through. This is going to look like a lot of code at once, but I don’t use anything in these workflows that we will not be covering (in some way!) today. Hopefully, by the end of today’s workshop you will be able both to understand and dissect complex code and use it to build your own analyses and visualizations.</p>
+<div id="cider" class="section level3 hasAnchor" number="1.3.1">
+<h3><span class="header-section-number">1.3.1</span> Cider<a href="importing-and-wrangling-data.html#cider" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>These data come from a small consumer study on 3 commercial “hard” (alcoholic) ciders, served in two conditions (chilled or unchilled) to 48 consumers, who used a pre-defined CATA lexicon, rated overall liking, and evaluated cider “dryness” on a 4-pt, structured line scale. The full details of the study are published in <span class="citation">Calvert et al. (2022)</span>. Here, we develop a complex and informative Correspondence Analysis (CA) plot of these results, as this is a very common output for sensory scientists.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="importing-and-wrangling-data.html#cb7-1" tabindex="-1"></a>raw_cider_data <span class="ot">&lt;-</span> </span>
+<span id="cb7-2"><a href="importing-and-wrangling-data.html#cb7-2" tabindex="-1"></a>  <span class="fu">read_csv</span>(<span class="st">&quot;data/CiderDryness_SensoryDATA.csv&quot;</span>)</span>
+<span id="cb7-3"><a href="importing-and-wrangling-data.html#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="importing-and-wrangling-data.html#cb7-4" tabindex="-1"></a>cider_samples <span class="ot">&lt;-</span></span>
+<span id="cb7-5"><a href="importing-and-wrangling-data.html#cb7-5" tabindex="-1"></a>  raw_cider_data <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="importing-and-wrangling-data.html#cb7-6" tabindex="-1"></a>  <span class="fu">select</span>(Sample_Name, Temperature) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="importing-and-wrangling-data.html#cb7-7" tabindex="-1"></a>  <span class="fu">unite</span>(Sample_Name, Temperature, <span class="at">col =</span> <span class="st">&quot;sample&quot;</span>, <span class="at">sep =</span> <span class="st">&quot; &quot;</span>, <span class="at">remove =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-8"><a href="importing-and-wrangling-data.html#cb7-8" tabindex="-1"></a>  <span class="fu">distinct</span>()</span>
+<span id="cb7-9"><a href="importing-and-wrangling-data.html#cb7-9" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="importing-and-wrangling-data.html#cb7-10" tabindex="-1"></a>ca_cider <span class="ot">&lt;-</span> </span>
+<span id="cb7-11"><a href="importing-and-wrangling-data.html#cb7-11" tabindex="-1"></a>  raw_cider_data <span class="sc">%&gt;%</span></span>
+<span id="cb7-12"><a href="importing-and-wrangling-data.html#cb7-12" tabindex="-1"></a>  <span class="fu">select</span>(Sample_Name, Temperature, Fresh_Apples<span class="sc">:</span>Synthetic) <span class="sc">%&gt;%</span></span>
+<span id="cb7-13"><a href="importing-and-wrangling-data.html#cb7-13" tabindex="-1"></a>  <span class="fu">unite</span>(Sample_Name, Temperature, <span class="at">col =</span> <span class="st">&quot;sample&quot;</span>, <span class="at">sep =</span> <span class="st">&quot; &quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-14"><a href="importing-and-wrangling-data.html#cb7-14" tabindex="-1"></a>  <span class="fu">group_by</span>(sample) <span class="sc">%&gt;%</span></span>
+<span id="cb7-15"><a href="importing-and-wrangling-data.html#cb7-15" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span><span class="fu">sum</span>(.))) <span class="sc">%&gt;%</span></span>
+<span id="cb7-16"><a href="importing-and-wrangling-data.html#cb7-16" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;sample&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-17"><a href="importing-and-wrangling-data.html#cb7-17" tabindex="-1"></a>  FactoMineR<span class="sc">::</span><span class="fu">CA</span>(<span class="at">graph =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-18"><a href="importing-and-wrangling-data.html#cb7-18" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="importing-and-wrangling-data.html#cb7-19" tabindex="-1"></a>ca_cider_coords <span class="ot">&lt;-</span> </span>
+<span id="cb7-20"><a href="importing-and-wrangling-data.html#cb7-20" tabindex="-1"></a>  ca_cider<span class="sc">$</span>row<span class="sc">$</span>coord <span class="sc">%&gt;%</span></span>
+<span id="cb7-21"><a href="importing-and-wrangling-data.html#cb7-21" tabindex="-1"></a>  <span class="fu">as_tibble</span>(<span class="at">rownames =</span> <span class="st">&quot;name&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-22"><a href="importing-and-wrangling-data.html#cb7-22" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">type =</span> <span class="st">&quot;row&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-23"><a href="importing-and-wrangling-data.html#cb7-23" tabindex="-1"></a>  <span class="fu">bind_rows</span>(</span>
+<span id="cb7-24"><a href="importing-and-wrangling-data.html#cb7-24" tabindex="-1"></a>    ca_cider<span class="sc">$</span>col<span class="sc">$</span>coord <span class="sc">%&gt;%</span></span>
+<span id="cb7-25"><a href="importing-and-wrangling-data.html#cb7-25" tabindex="-1"></a>      <span class="fu">as_tibble</span>(<span class="at">rownames =</span> <span class="st">&quot;name&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-26"><a href="importing-and-wrangling-data.html#cb7-26" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">type =</span> <span class="st">&quot;col&quot;</span>)</span>
+<span id="cb7-27"><a href="importing-and-wrangling-data.html#cb7-27" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-28"><a href="importing-and-wrangling-data.html#cb7-28" tabindex="-1"></a>  <span class="fu">left_join</span>(cider_samples, <span class="fu">join_by</span>(name <span class="sc">==</span> sample)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-29"><a href="importing-and-wrangling-data.html#cb7-29" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(Sample_Name), name, Sample_Name),</span>
+<span id="cb7-30"><a href="importing-and-wrangling-data.html#cb7-30" tabindex="-1"></a>         <span class="at">name =</span> <span class="fu">str_replace_all</span>(name, <span class="st">&quot;_&quot;</span>, <span class="st">&quot; &quot;</span>),</span>
+<span id="cb7-31"><a href="importing-and-wrangling-data.html#cb7-31" tabindex="-1"></a>         <span class="at">name =</span> <span class="fu">str_replace</span>(name, <span class="st">&quot;FullBodied&quot;</span>, <span class="st">&quot;Full Bodied&quot;</span>))</span>
+<span id="cb7-32"><a href="importing-and-wrangling-data.html#cb7-32" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="importing-and-wrangling-data.html#cb7-33" tabindex="-1"></a>nice_cider_labels <span class="ot">&lt;-</span></span>
+<span id="cb7-34"><a href="importing-and-wrangling-data.html#cb7-34" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">str_c</span>(<span class="st">&quot;Dimension 1, &quot;</span>, <span class="fu">round</span>(ca_cider<span class="sc">$</span>eig[<span class="dv">1</span>, <span class="dv">2</span>], <span class="dv">1</span>), <span class="st">&quot;% of inertia&quot;</span>),</span>
+<span id="cb7-35"><a href="importing-and-wrangling-data.html#cb7-35" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">str_c</span>(<span class="st">&quot;Dimension 2, &quot;</span>, <span class="fu">round</span>(ca_cider<span class="sc">$</span>eig[<span class="dv">2</span>, <span class="dv">2</span>], <span class="dv">1</span>), <span class="st">&quot;% of inertia&quot;</span>),</span>
+<span id="cb7-36"><a href="importing-and-wrangling-data.html#cb7-36" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">&quot;Correspondence Analysis biplot (symmetric)&quot;</span>,</span>
+<span id="cb7-37"><a href="importing-and-wrangling-data.html#cb7-37" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Effect of cider serving temperature on consumer sensory perception&quot;</span>)</span>
+<span id="cb7-38"><a href="importing-and-wrangling-data.html#cb7-38" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="importing-and-wrangling-data.html#cb7-39" tabindex="-1"></a>p2_ca_cider_cata <span class="ot">&lt;-</span> </span>
+<span id="cb7-40"><a href="importing-and-wrangling-data.html#cb7-40" tabindex="-1"></a>  ca_cider_coords <span class="sc">%&gt;%</span></span>
+<span id="cb7-41"><a href="importing-and-wrangling-data.html#cb7-41" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">font =</span> <span class="fu">if_else</span>(type <span class="sc">==</span> <span class="st">&quot;row&quot;</span>, <span class="st">&quot;plain&quot;</span>, <span class="st">&quot;italic&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-42"><a href="importing-and-wrangling-data.html#cb7-42" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="st">`</span><span class="at">Dim 1</span><span class="st">`</span>, <span class="at">y =</span> <span class="st">`</span><span class="at">Dim 2</span><span class="st">`</span>)) <span class="sc">+</span></span>
+<span id="cb7-43"><a href="importing-and-wrangling-data.html#cb7-43" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;darkgrey&quot;</span>) <span class="sc">+</span></span>
+<span id="cb7-44"><a href="importing-and-wrangling-data.html#cb7-44" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;darkgrey&quot;</span>) <span class="sc">+</span></span>
+<span id="cb7-45"><a href="importing-and-wrangling-data.html#cb7-45" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">color =</span> type, <span class="at">shape =</span> Temperature),</span>
+<span id="cb7-46"><a href="importing-and-wrangling-data.html#cb7-46" tabindex="-1"></a>             <span class="at">data =</span> ca_cider_coords <span class="sc">%&gt;%</span> <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">&quot;row&quot;</span>),</span>
+<span id="cb7-47"><a href="importing-and-wrangling-data.html#cb7-47" tabindex="-1"></a>             <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb7-48"><a href="importing-and-wrangling-data.html#cb7-48" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(<span class="fu">aes</span>(<span class="at">label =</span> name, <span class="at">color =</span> type, <span class="at">fontface =</span> font),</span>
+<span id="cb7-49"><a href="importing-and-wrangling-data.html#cb7-49" tabindex="-1"></a>                           <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb7-50"><a href="importing-and-wrangling-data.html#cb7-50" tabindex="-1"></a>  <span class="fu">coord_equal</span>() <span class="sc">+</span> </span>
+<span id="cb7-51"><a href="importing-and-wrangling-data.html#cb7-51" tabindex="-1"></a>  <span class="fu">theme_linedraw</span>() <span class="sc">+</span></span>
+<span id="cb7-52"><a href="importing-and-wrangling-data.html#cb7-52" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span>) <span class="sc">+</span></span>
+<span id="cb7-53"><a href="importing-and-wrangling-data.html#cb7-53" tabindex="-1"></a>  nice_cider_labels <span class="sc">+</span> </span>
+<span id="cb7-54"><a href="importing-and-wrangling-data.html#cb7-54" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;darkorange&quot;</span>, <span class="st">&quot;darkgreen&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb7-55"><a href="importing-and-wrangling-data.html#cb7-55" tabindex="-1"></a>  <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="dv">8</span>, <span class="dv">16</span>)) <span class="sc">+</span></span>
+<span id="cb7-56"><a href="importing-and-wrangling-data.html#cb7-56" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">shape =</span> <span class="fu">guide_legend</span>(),</span>
+<span id="cb7-57"><a href="importing-and-wrangling-data.html#cb7-57" tabindex="-1"></a>         <span class="at">color =</span> <span class="st">&quot;none&quot;</span>)</span>
+<span id="cb7-58"><a href="importing-and-wrangling-data.html#cb7-58" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="importing-and-wrangling-data.html#cb7-59" tabindex="-1"></a>p2_ca_cider_cata</span></code></pre></div>
+<p><img src="01-import-motivation-export_files/figure-html/cider%20CA%20final-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="berries" class="section level3 hasAnchor" number="1.3.2">
+<h3><span class="header-section-number">1.3.2</span> Berries<a href="importing-and-wrangling-data.html#berries" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Here we are going to import and process data from a study on berries. These data come from a large, central-location study on berries, the methodological details of which are published in <span class="citation">Yeung et al. (2021)</span>. Very briefly, the data describe the attributes and liking scores reported by consumers for a variety of berries across multiple CLTs. A total of 969 participants (<code>Subject Code</code>) and 23 berries (<code>Sample Name</code>) were involved in these tests, with only one species of berry (blackberry, blueberry, raspberry, or strawberry) presented during each CLT. In the actual experimental design, subjects got multiple sample sets (so there are <em>not</em> 969 unique subjects), but here we will treat them as unique for ease of description.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="importing-and-wrangling-data.html#cb8-1" tabindex="-1"></a><span class="co"># Import the data</span></span>
+<span id="cb8-2"><a href="importing-and-wrangling-data.html#cb8-2" tabindex="-1"></a>raw_berry_data <span class="ot">&lt;-</span> </span>
+<span id="cb8-3"><a href="importing-and-wrangling-data.html#cb8-3" tabindex="-1"></a>  <span class="fu">read_csv</span>(<span class="at">file =</span> <span class="st">&quot;data/clt-berry-data.csv&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="importing-and-wrangling-data.html#cb8-4" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">all</span>(<span class="fu">is.na</span>(.)))) </span>
+<span id="cb8-5"><a href="importing-and-wrangling-data.html#cb8-5" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="importing-and-wrangling-data.html#cb8-6" tabindex="-1"></a>cleaned_berry_data <span class="ot">&lt;-</span></span>
+<span id="cb8-7"><a href="importing-and-wrangling-data.html#cb8-7" tabindex="-1"></a>  raw_berry_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="importing-and-wrangling-data.html#cb8-8" tabindex="-1"></a>  <span class="co"># Get the relevant columns</span></span>
+<span id="cb8-9"><a href="importing-and-wrangling-data.html#cb8-9" tabindex="-1"></a>  <span class="fu">select</span>(<span class="st">`</span><span class="at">Subject Code</span><span class="st">`</span>, </span>
+<span id="cb8-10"><a href="importing-and-wrangling-data.html#cb8-10" tabindex="-1"></a>         berry,</span>
+<span id="cb8-11"><a href="importing-and-wrangling-data.html#cb8-11" tabindex="-1"></a>         sample,</span>
+<span id="cb8-12"><a href="importing-and-wrangling-data.html#cb8-12" tabindex="-1"></a>         <span class="fu">starts_with</span>(<span class="st">&quot;cata_&quot;</span>), </span>
+<span id="cb8-13"><a href="importing-and-wrangling-data.html#cb8-13" tabindex="-1"></a>         <span class="fu">contains</span>(<span class="st">&quot;overall&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-14"><a href="importing-and-wrangling-data.html#cb8-14" tabindex="-1"></a>  <span class="co"># Rescale the LAM and US scales to a 9-pt range</span></span>
+<span id="cb8-15"><a href="importing-and-wrangling-data.html#cb8-15" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lms_overall =</span> (lms_overall <span class="sc">+</span> <span class="dv">100</span>) <span class="sc">*</span> (<span class="dv">8</span> <span class="sc">/</span> <span class="dv">200</span>) <span class="sc">+</span> <span class="dv">1</span>,</span>
+<span id="cb8-16"><a href="importing-and-wrangling-data.html#cb8-16" tabindex="-1"></a>         <span class="at">us_overall =</span> (us_overall <span class="sc">+</span> <span class="dv">0</span>) <span class="sc">*</span> (<span class="dv">8</span> <span class="sc">/</span> <span class="dv">15</span>) <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-17"><a href="importing-and-wrangling-data.html#cb8-17" tabindex="-1"></a>  <span class="co"># Switch the 3 overall liking columns into a single column</span></span>
+<span id="cb8-18"><a href="importing-and-wrangling-data.html#cb8-18" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">contains</span>(<span class="st">&quot;overall&quot;</span>),</span>
+<span id="cb8-19"><a href="importing-and-wrangling-data.html#cb8-19" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">&quot;hedonic_scale&quot;</span>,</span>
+<span id="cb8-20"><a href="importing-and-wrangling-data.html#cb8-20" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">&quot;rating&quot;</span>,</span>
+<span id="cb8-21"><a href="importing-and-wrangling-data.html#cb8-21" tabindex="-1"></a>               <span class="at">values_drop_na =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-22"><a href="importing-and-wrangling-data.html#cb8-22" tabindex="-1"></a>  <span class="co"># Let&#39;s make all the CATA variables into a single column to make life easier</span></span>
+<span id="cb8-23"><a href="importing-and-wrangling-data.html#cb8-23" tabindex="-1"></a>  <span class="co"># (and get rid of those NAs)</span></span>
+<span id="cb8-24"><a href="importing-and-wrangling-data.html#cb8-24" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">starts_with</span>(<span class="st">&quot;cata_&quot;</span>),</span>
+<span id="cb8-25"><a href="importing-and-wrangling-data.html#cb8-25" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">&quot;cata_variable&quot;</span>,</span>
+<span id="cb8-26"><a href="importing-and-wrangling-data.html#cb8-26" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">&quot;checked&quot;</span>,</span>
+<span id="cb8-27"><a href="importing-and-wrangling-data.html#cb8-27" tabindex="-1"></a>               <span class="at">names_transform =</span> <span class="sc">~</span><span class="fu">str_remove</span>(., <span class="st">&quot;cata_&quot;</span>),</span>
+<span id="cb8-28"><a href="importing-and-wrangling-data.html#cb8-28" tabindex="-1"></a>               <span class="at">values_drop_na =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-29"><a href="importing-and-wrangling-data.html#cb8-29" tabindex="-1"></a></span>
+<span id="cb8-30"><a href="importing-and-wrangling-data.html#cb8-30" tabindex="-1"></a>berry_penalty_analysis_data <span class="ot">&lt;-</span> </span>
+<span id="cb8-31"><a href="importing-and-wrangling-data.html#cb8-31" tabindex="-1"></a>  cleaned_berry_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-32"><a href="importing-and-wrangling-data.html#cb8-32" tabindex="-1"></a>  <span class="fu">group_by</span>(berry, cata_variable, checked) <span class="sc">%&gt;%</span></span>
+<span id="cb8-33"><a href="importing-and-wrangling-data.html#cb8-33" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">penalty_lift =</span> <span class="fu">mean</span>(rating),</span>
+<span id="cb8-34"><a href="importing-and-wrangling-data.html#cb8-34" tabindex="-1"></a>            <span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb8-35"><a href="importing-and-wrangling-data.html#cb8-35" tabindex="-1"></a>  <span class="fu">ungroup</span>() </span>
+<span id="cb8-36"><a href="importing-and-wrangling-data.html#cb8-36" tabindex="-1"></a></span>
+<span id="cb8-37"><a href="importing-and-wrangling-data.html#cb8-37" tabindex="-1"></a><span class="co"># Make a plot of the overall penalty/lift for checked attributes</span></span>
+<span id="cb8-38"><a href="importing-and-wrangling-data.html#cb8-38" tabindex="-1"></a>p1_berry_penalty <span class="ot">&lt;-</span> </span>
+<span id="cb8-39"><a href="importing-and-wrangling-data.html#cb8-39" tabindex="-1"></a>  berry_penalty_analysis_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-40"><a href="importing-and-wrangling-data.html#cb8-40" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>count) <span class="sc">%&gt;%</span></span>
+<span id="cb8-41"><a href="importing-and-wrangling-data.html#cb8-41" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> checked,</span>
+<span id="cb8-42"><a href="importing-and-wrangling-data.html#cb8-42" tabindex="-1"></a>              <span class="at">values_from =</span> penalty_lift,</span>
+<span id="cb8-43"><a href="importing-and-wrangling-data.html#cb8-43" tabindex="-1"></a>              <span class="at">names_prefix =</span> <span class="st">&quot;checked_&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-44"><a href="importing-and-wrangling-data.html#cb8-44" tabindex="-1"></a>  <span class="fu">group_by</span>(berry, cata_variable) <span class="sc">%&gt;%</span></span>
+<span id="cb8-45"><a href="importing-and-wrangling-data.html#cb8-45" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">penalty_lift =</span> checked_1 <span class="sc">-</span> checked_0) <span class="sc">%&gt;%</span></span>
+<span id="cb8-46"><a href="importing-and-wrangling-data.html#cb8-46" tabindex="-1"></a>  <span class="co"># We can tidy up our CATA labels</span></span>
+<span id="cb8-47"><a href="importing-and-wrangling-data.html#cb8-47" tabindex="-1"></a>  <span class="fu">separate</span>(cata_variable, </span>
+<span id="cb8-48"><a href="importing-and-wrangling-data.html#cb8-48" tabindex="-1"></a>           <span class="at">into =</span> <span class="fu">c</span>(<span class="st">&quot;mode&quot;</span>, <span class="st">&quot;variable&quot;</span>), </span>
+<span id="cb8-49"><a href="importing-and-wrangling-data.html#cb8-49" tabindex="-1"></a>           <span class="at">sep =</span> <span class="st">&quot;_&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-50"><a href="importing-and-wrangling-data.html#cb8-50" tabindex="-1"></a>  <span class="co"># Fix a typo</span></span>
+<span id="cb8-51"><a href="importing-and-wrangling-data.html#cb8-51" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">mode =</span> <span class="fu">str_replace</span>(mode, <span class="st">&quot;appearane&quot;</span>, <span class="st">&quot;appearance&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-52"><a href="importing-and-wrangling-data.html#cb8-52" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">mode =</span> <span class="fu">case_when</span>(mode <span class="sc">==</span> <span class="st">&quot;taste&quot;</span> <span class="sc">~</span> <span class="st">&quot;(T)&quot;</span>,</span>
+<span id="cb8-53"><a href="importing-and-wrangling-data.html#cb8-53" tabindex="-1"></a>                          mode <span class="sc">==</span> <span class="st">&quot;appearance&quot;</span> <span class="sc">~</span> <span class="st">&quot;(A)&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-54"><a href="importing-and-wrangling-data.html#cb8-54" tabindex="-1"></a>  <span class="fu">unite</span>(variable, mode, <span class="at">col =</span> <span class="st">&quot;cata_variable&quot;</span>, <span class="at">sep =</span> <span class="st">&quot; &quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-55"><a href="importing-and-wrangling-data.html#cb8-55" tabindex="-1"></a>  <span class="co"># We are using a function from tidytext that makes faceting the final figure</span></span>
+<span id="cb8-56"><a href="importing-and-wrangling-data.html#cb8-56" tabindex="-1"></a>  <span class="co"># easier</span></span>
+<span id="cb8-57"><a href="importing-and-wrangling-data.html#cb8-57" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cata_variable =</span> tidytext<span class="sc">::</span><span class="fu">reorder_within</span>(<span class="at">x =</span> cata_variable,</span>
+<span id="cb8-58"><a href="importing-and-wrangling-data.html#cb8-58" tabindex="-1"></a>                                                  <span class="at">by =</span> penalty_lift,</span>
+<span id="cb8-59"><a href="importing-and-wrangling-data.html#cb8-59" tabindex="-1"></a>                                                  <span class="at">within =</span> berry)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-60"><a href="importing-and-wrangling-data.html#cb8-60" tabindex="-1"></a>  <span class="co">#And finally we plot!</span></span>
+<span id="cb8-61"><a href="importing-and-wrangling-data.html#cb8-61" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> cata_variable, <span class="at">y =</span> penalty_lift)) <span class="sc">+</span></span>
+<span id="cb8-62"><a href="importing-and-wrangling-data.html#cb8-62" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">fill =</span> penalty_lift), <span class="at">color =</span> <span class="st">&quot;white&quot;</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span> </span>
+<span id="cb8-63"><a href="importing-and-wrangling-data.html#cb8-63" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>berry, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span> </span>
+<span id="cb8-64"><a href="importing-and-wrangling-data.html#cb8-64" tabindex="-1"></a>  tidytext<span class="sc">::</span><span class="fu">scale_x_reordered</span>() <span class="sc">+</span> </span>
+<span id="cb8-65"><a href="importing-and-wrangling-data.html#cb8-65" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span> </span>
+<span id="cb8-66"><a href="importing-and-wrangling-data.html#cb8-66" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span> </span>
+<span id="cb8-67"><a href="importing-and-wrangling-data.html#cb8-67" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">&quot;tan&quot;</span>, <span class="at">high =</span> <span class="st">&quot;darkgreen&quot;</span>) <span class="sc">+</span> </span>
+<span id="cb8-68"><a href="importing-and-wrangling-data.html#cb8-68" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-69"><a href="importing-and-wrangling-data.html#cb8-69" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Penalty / Lift Analysis&quot;</span>,</span>
+<span id="cb8-70"><a href="importing-and-wrangling-data.html#cb8-70" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">&quot;displays the mean difference (within berries) for when a CATA variable is checked</span><span class="sc">\n</span><span class="st">or un-checked&quot;</span>)</span>
+<span id="cb8-71"><a href="importing-and-wrangling-data.html#cb8-71" tabindex="-1"></a></span>
+<span id="cb8-72"><a href="importing-and-wrangling-data.html#cb8-72" tabindex="-1"></a>p1_berry_penalty</span></code></pre></div>
+<p><img src="01-import-motivation-export_files/figure-html/berry-full-penalty-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="publication-quality" class="section level3 hasAnchor" number="1.3.3">
+<h3><span class="header-section-number">1.3.3</span> “Publication quality”<a href="importing-and-wrangling-data.html#publication-quality" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>What do we mean by “publication quality” visualizations? Neither of us are theorists of visualization–for that, we would recommend that you look at the excellent work from <a href="https://clauswilke.com/dataviz/">Claus Wilke</a> and <a href="https://socviz.co/index.html#preface">Kieran Healey</a>. We will not be discussing (in any detail) ideas about which color palettes best communicate different types of data, what kinds of displays are most effective (box plots vs violin plots vs …), or whether pie charts are really so bad (mostly yes).</p>
+<p>Rather, we have noticed that most <code>R</code> packages for data analysis provide visualizations as part of their output, and many sensory scientists are using these <em>default</em> outputs in publications. This is annoying because often these visualizations are meant to be part of the data exploration/analysis process: they are not polished or they don’t display the data to its best advantage (whatever that is for the particular case). In this workshop, we want to help you develop the competency to alter or re-make these visualizations for yourself so that you can produce visualizations that are relevant to <em>your</em> application, that are attractive and easy to read.</p>
+<p>As an example, the <code>FactoMineR</code> package has excellent default visualizations for exploring and understanding the basic outputs of many common multivariate analyses used by sensory scientists. We can take a look at our cider CATA data visualized as a symmetric CA “biplot” without much effort:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="importing-and-wrangling-data.html#cb9-1" tabindex="-1"></a>p3_cider_factominer <span class="ot">&lt;-</span> <span class="fu">plot</span>(ca_cider)</span>
+<span id="cb9-2"><a href="importing-and-wrangling-data.html#cb9-2" tabindex="-1"></a>p3_cider_factominer</span></code></pre></div>
+<p><img src="01-import-motivation-export_files/figure-html/CA%20biplot%20made%20by%20FactoMineR-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>But there might be things about this we want to change! It would be very helpful to know, for example, that this is a <code>ggplot2</code> object that can be altered by a basic handful of standardized syntax. For example:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="importing-and-wrangling-data.html#cb10-1" tabindex="-1"></a>p3_cider_factominer <span class="sc">+</span></span>
+<span id="cb10-2"><a href="importing-and-wrangling-data.html#cb10-2" tabindex="-1"></a>  <span class="fu">theme_dark</span>() <span class="sc">+</span> </span>
+<span id="cb10-3"><a href="importing-and-wrangling-data.html#cb10-3" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">&quot;Now we can say some more things!&quot;</span>, </span>
+<span id="cb10-4"><a href="importing-and-wrangling-data.html#cb10-4" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">&quot;of 6 ciders tasted by 48 subjects&quot;</span>)</span></code></pre></div>
+<p><img src="01-import-motivation-export_files/figure-html/editing%20the%20FactoMineR%20plot-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Like I said, we’re not here to tell you <em>how</em> your plots should look…</p>
+<p>Furthermore, default plots often do not allow us to do everything we want to do. Say we were very attached to the orange and green color scheme I used above, and wanted to use it in the nice plot from <code>FactoMineR</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="importing-and-wrangling-data.html#cb11-1" tabindex="-1"></a>p3_cider_factominer <span class="sc">+</span> </span>
+<span id="cb11-2"><a href="importing-and-wrangling-data.html#cb11-2" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;darkorange&quot;</span>, <span class="st">&quot;darkgreen&quot;</span>))</span></code></pre></div>
+<p><img src="01-import-motivation-export_files/figure-html/limits%20of%20automatic%20plots-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hmm.</p>
+<p>The motivating point, here, is to be able to make visualizations that accomplish what you want them to, rather than being at the mercy of packages that have certain defaults built in.</p>
+</div>
+</div>
+<div id="saving-your-data" class="section level2 hasAnchor" number="1.4">
+<h2><span class="header-section-number">1.4</span> Saving your data<a href="importing-and-wrangling-data.html#saving-your-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Often, you will have an ugly, raw data file. You want to clean up this data file: remove junk variables, rename columns, omit outliers, and have something that is actually workable. Sometimes, you create a new intermediate product (say, a penalty-analysis table) that you’d like to be able to share and work with elsewhere. Now, you know how to do all that in <code>R</code>, often with fewer clicks and less effort than in Excel or other WYSIWYG tool. But once you restart your <code>R</code> session, you will need to rerun this workflow, and you can’t access your data products in other software.</p>
+<p>To save this work, you can use <code>write.csv()</code> or <code>readr::write_csv()</code> and its relatives (e.g., functions like <code>write.file()</code>). These will create <strong>or overwrite</strong> a file in the directory location you specify.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="importing-and-wrangling-data.html#cb12-1" tabindex="-1"></a><span class="co"># We will keep in the tidyverse idiom with readr::write_csv()</span></span>
+<span id="cb12-2"><a href="importing-and-wrangling-data.html#cb12-2" tabindex="-1"></a><span class="fu">write_csv</span>(<span class="at">x =</span> berry_penalty_analysis_data,</span>
+<span id="cb12-3"><a href="importing-and-wrangling-data.html#cb12-3" tabindex="-1"></a>          <span class="at">file =</span> <span class="st">&quot;data/berry-penalty-data.csv&quot;</span>)</span></code></pre></div>
+<p>Sometimes, we want to be able to save <code>R</code> data for re-loading later. It’s good to do this explicitly, rather than relying on something like RStudio’s version of autosaving (which we’ve turned off for you at the beginning of this tutorial). You might want to do this instead of <code>write_csv()</code> because:</p>
+<ul>
+<li>You have non-tabular data (lists, tensors, ggplots, etc)</li>
+<li>You are saving the output of time-consuming workflows and want to be able to start again without re-running those workflows</li>
+<li>You want to bundle a lot of objects together into a single file for yourself or other <code>R</code> users</li>
+</ul>
+<p>If you want to save a single <code>R</code> object, the <code>write_rds()</code> function saves an object into a native <code>R</code> data format: <code>.rds</code>. This uses syntax similar to <code>write_csv()</code>:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="importing-and-wrangling-data.html#cb13-1" tabindex="-1"></a>berry_penalty_analysis_data <span class="sc">%&gt;%</span></span>
+<span id="cb13-2"><a href="importing-and-wrangling-data.html#cb13-2" tabindex="-1"></a>  <span class="fu">write_rds</span>(<span class="at">file =</span> <span class="st">&quot;data/berry-penalty-data.rds&quot;</span>)</span></code></pre></div>
+<p>Often, though, it can be helpful to save multiple <code>R</code> objects so that a workplace can be restored. In this case, the generic <code>save()</code> function will save a <em>list</em> of <code>R</code> objects provided as symbolic names into a file of format <code>.RData</code>, which can be restored with <code>load()</code>.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="importing-and-wrangling-data.html#cb14-1" tabindex="-1"></a><span class="fu">save</span>(berry_penalty_analysis_data,</span>
+<span id="cb14-2"><a href="importing-and-wrangling-data.html#cb14-2" tabindex="-1"></a>     ca_cider_coords,</span>
+<span id="cb14-3"><a href="importing-and-wrangling-data.html#cb14-3" tabindex="-1"></a>     ca_cider,</span>
+<span id="cb14-4"><a href="importing-and-wrangling-data.html#cb14-4" tabindex="-1"></a>     <span class="at">file =</span> <span class="st">&quot;data/workshop-data.RData&quot;</span>)</span>
+<span id="cb14-5"><a href="importing-and-wrangling-data.html#cb14-5" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="importing-and-wrangling-data.html#cb14-6" tabindex="-1"></a><span class="fu">rm</span>(berry_penalty_analysis_data,</span>
+<span id="cb14-7"><a href="importing-and-wrangling-data.html#cb14-7" tabindex="-1"></a>     ca_cider_coords,</span>
+<span id="cb14-8"><a href="importing-and-wrangling-data.html#cb14-8" tabindex="-1"></a>     ca_cider)</span>
+<span id="cb14-9"><a href="importing-and-wrangling-data.html#cb14-9" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="importing-and-wrangling-data.html#cb14-10" tabindex="-1"></a><span class="fu">load</span>(<span class="at">file =</span> <span class="st">&quot;data/workshop-data.RData&quot;</span>)</span></code></pre></div>
+<p>This can be very helpful for sharing data.</p>
+<div id="a-note-on-replicability" class="section level3 hasAnchor" number="1.4.1">
+<h3><span class="header-section-number">1.4.1</span> A note on replicability<a href="importing-and-wrangling-data.html#a-note-on-replicability" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>In order to make sure that your data are replicable, you should <em>always</em> keep your raw data and the script/code that transforms that data into your cleaned form. That way, when (<em>not</em> if) you discover a couple minor errors, you can go back and fix them, and you will not be stuck trying to remember how you overwrote this data in the first place.</p>
+<p>This will also protect you if, in the future, someone looks at your data and asks something like “but where did these means come from?”</p>
+</div>
+</div>
+<div id="wrap-up" class="section level2 hasAnchor" number="1.5">
+<h2><span class="header-section-number">1.5</span> Wrap up<a href="importing-and-wrangling-data.html#wrap-up" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>This introductory section speeds over a large number of basic data-manipulation tasks that are key to any kind of analysis. To learn more, you can look into some of the resources we’ve linked here (in particular the <a href="https://r4ds.hadley.nz/">R for Data Science handbook</a>), some of our <a href="https://jlahne.github.io/eurosense-tutorial-2022/">previous</a> <a href="https://lhami.github.io/pangborn-r-tutorial-2023/">workshops</a> on the topic, to see how these tools can be applied to sensory data, or my recently created <a href="https://jlahne.github.io/r-opus-v2/">R Opus v2</a>, which applies these tools to a variety of common sensory analyses.</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="the-basics-of-plotting-with-ggplot2.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

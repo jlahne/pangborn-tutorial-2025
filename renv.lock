@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.4.1",
+    "Version": "4.4.2",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -642,6 +642,21 @@
       ],
       "Hash": "39b2e002522bfd258039ee4e889e0fd1"
     },
+    "diffobj": {
+      "Package": "diffobj",
+      "Version": "0.3.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "crayon",
+        "methods",
+        "stats",
+        "tools",
+        "utils"
+      ],
+      "Hash": "e036ce354ab60e705ac5f40bac87e8cb"
+    },
     "digest": {
       "Package": "digest",
       "Version": "0.6.37",
@@ -1037,6 +1052,36 @@
       ],
       "Hash": "d6db1667059d027da730decdc214b959"
     },
+    "gradethis": {
+      "Package": "gradethis",
+      "Version": "0.2.14",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "rstudio",
+      "RemoteRepo": "gradethis",
+      "RemoteRef": "main",
+      "RemoteSha": "502af700437db1b648a35200ce7b940db0cc3d45",
+      "Remotes": "rstudio/ggcheck, rstudio/learnr",
+      "Requirements": [
+        "R",
+        "checkmate",
+        "commonmark",
+        "ellipsis",
+        "glue",
+        "htmltools",
+        "learnr",
+        "lifecycle",
+        "magrittr",
+        "purrr",
+        "rlang",
+        "rstudioapi",
+        "utils",
+        "waldo",
+        "withr"
+      ],
+      "Hash": "0a4de1a42e85535e51fff567a016d71c"
+    },
     "gtable": {
       "Package": "gtable",
       "Version": "0.3.5",
@@ -1283,13 +1328,17 @@
     },
     "learnr": {
       "Package": "learnr",
-      "Version": "0.11.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "0.11.5.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "rstudio",
+      "RemoteRepo": "learnr",
+      "RemoteRef": "main",
+      "RemoteSha": "a644d2dd4c083c7596fd73edc0431bcb52811357",
       "Requirements": [
         "checkmate",
         "digest",
-        "ellipsis",
         "evaluate",
         "htmltools",
         "htmlwidgets",
@@ -1309,7 +1358,7 @@
         "utils",
         "withr"
       ],
-      "Hash": "3267d22ec2560045f5ff6e24d536c8d7"
+      "Hash": "91f21c351486f5f317f2026867602612"
     },
     "lifecycle": {
       "Package": "lifecycle",
@@ -2120,15 +2169,20 @@
     },
     "systemfonts": {
       "Package": "systemfonts",
-      "Version": "1.1.0",
+      "Version": "1.2.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
+        "base64enc",
         "cpp11",
-        "lifecycle"
+        "grid",
+        "jsonlite",
+        "lifecycle",
+        "tools",
+        "utils"
       ],
-      "Hash": "213b6b8ed5afbf934843e6c3b090d418"
+      "Hash": "fe31683d2c6fd9a5724bcdf8ed44ded9"
     },
     "textshaping": {
       "Package": "textshaping",
@@ -2405,6 +2459,21 @@
         "withr"
       ],
       "Hash": "390f9315bc0025be03012054103d227c"
+    },
+    "waldo": {
+      "Package": "waldo",
+      "Version": "0.6.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cli",
+        "diffobj",
+        "glue",
+        "methods",
+        "rlang"
+      ],
+      "Hash": "b7b91294ee9418a54527a9a9d8677597"
     },
     "wesanderson": {
       "Package": "wesanderson",
