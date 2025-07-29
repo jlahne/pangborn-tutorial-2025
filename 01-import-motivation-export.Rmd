@@ -10,7 +10,6 @@ knitr::opts_chunk$set(fig.align = "center", warning = FALSE, message = FALSE)
 ```
 
 Now that everyone is on the same page for how we're going to use `R`, we're going to dive right into importing our data into `R`, exploring it, and--most importantly--visualizing it.  In this part of the tutorial, we are going to focus on getting data into `R` and manipulating it.  
-
 Personally, I prefer to see the reason for doing something, rather than being shown a bunch of building blocks and not seeing how they fit together.  Therefore, we're going to start off this section with a complete work flow for importing and visualizing some real results, and then work backward as we unpack how and why we've taken particular steps.
 
 ## Motivation: exploring berry and cider CATA/liking data
@@ -21,7 +20,6 @@ Before we begin, we need to make sure we've loaded the packages we're going to u
 # This package is actually a set of utility packages we will use a lot
 library(tidyverse)
 ```
-
 
 ## Getting data into `R`
 
@@ -46,18 +44,75 @@ As a note, in many countries the separator (delimiter) will be the semi-colon (`
 
 The `read_csv()` function creates a type of object in `R` called a `tibble`, which is a special type of `data.frame`.  These are rectangular "spreadsheet-like" objects like you would encounter in Excel or manipulate in JMP or SPSS.
 
-We can learn more about the objects we just created by either examining them in the `Environment` tab or, preferably, using the `glimpse()` function to get a look at what we have (note that `glimpse()` comes from `tidyverse`; if you don't load it by running `library(tidyverse)` earlier in your session you will get an error).
-
-```{r raw-data-inspection}
-glimpse(raw_berry_data)
-glimpse(raw_cider_data)
-```
-
-This tells us how many rows we have, what the names of our columns (variables) are, what kind of column they are (numeric, character, logical, etc), and a preview of the first few entres in each column.
-
 ## The destination
 
 The plan here is to present "full" workflows for data import, wrangling, and visualization below so as to give a skeleton to work through.  This is going to look like a lot of code at once, but I don't use anything in these workflows that we will not be covering (in some way!) today.  Hopefully, by the end of today's workshop you will be able both to understand and dissect complex code and use it to build your own analyses and visualizations.
+
+### Cider {#cider}
+
+These data come from a small consumer study on 3 commercial "hard" (alcoholic) ciders, served in two conditions (chilled or unchilled) to 48 consumers, who used a pre-defined CATA lexicon, rated overall liking, and evaluated cider "dryness" on a 4-pt, structured line scale.  The full details of the study are published in @calvert2022a.  Here, we develop a complex and informative Correspondence Analysis (CA) plot of these results, as this is a very common output for sensory scientists.
+
+```{r cider CA final, message = FALSE, fig.align='center', fig.width = 7, results = FALSE}
+raw_cider_data <- 
+  read_csv("data/CiderDryness_SensoryDATA.csv")
+
+cider_samples <-
+  raw_cider_data %>%
+  select(Sample_Name, Temperature) %>%
+  unite(Sample_Name, Temperature, col = "sample", sep = " ", remove = FALSE) %>%
+  distinct()
+
+ca_cider <- 
+  raw_cider_data %>%
+  select(Sample_Name, Temperature, Fresh_Apples:Synthetic) %>%
+  unite(Sample_Name, Temperature, col = "sample", sep = " ") %>%
+  group_by(sample) %>%
+  summarize(across(where(is.numeric), ~sum(.))) %>%
+  column_to_rownames("sample") %>%
+  FactoMineR::CA(graph = FALSE)
+
+ca_cider_coords <- 
+  ca_cider$row$coord %>%
+  as_tibble(rownames = "name") %>%
+  mutate(type = "row") %>%
+  bind_rows(
+    ca_cider$col$coord %>%
+      as_tibble(rownames = "name") %>%
+      mutate(type = "col")
+  ) %>%
+  left_join(cider_samples, join_by(name == sample)) %>%
+  mutate(name = if_else(is.na(Sample_Name), name, Sample_Name),
+         name = str_replace_all(name, "_", " "),
+         name = str_replace(name, "FullBodied", "Full Bodied"))
+
+nice_cider_labels <-
+  labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
+       y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
+       subtitle = "Correspondence Analysis biplot (symmetric)",
+       title = "Effect of cider serving temperature on consumer sensory perception")
+
+p2_ca_cider_cata <- 
+  ca_cider_coords %>%
+  mutate(font = if_else(type == "row", "plain", "italic")) %>%
+  ggplot(aes(x = `Dim 1`, y = `Dim 2`)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgrey") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "darkgrey") +
+  geom_point(aes(color = type, shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row"),
+             size = 3) +
+  ggrepel::geom_text_repel(aes(label = name, color = type, fontface = font),
+                           show.legend = FALSE) +
+  coord_equal() + 
+  theme_linedraw() +
+  theme(legend.position = "bottom") +
+  nice_cider_labels + 
+  scale_color_manual(values = c("darkorange", "darkgreen")) +
+  scale_shape_manual(values = c(8, 16)) +
+  guides(shape = guide_legend(),
+         color = "none")
+
+p2_ca_cider_cata
+```
 
 ### Berries {#berries}
 
@@ -138,71 +193,6 @@ p1_berry_penalty <-
 p1_berry_penalty
 ```
 
-### Cider {#cider}
-
-Now, let's get our cider data.  These data come from a small consumer study on 3 commercial "hard" (alcoholic) ciders, served in two conditions (chilled or unchilled) to 48 consumers, who used a pre-defined CATA lexicon, rated overall liking, and evaluated cider "dryness" on a 4-pt, structured line scale.  The full details of the study are published in @calvert2022a.  Here, we develop a complex and informative Correspondence Analysis (CA) plot of these results, as this is a very common output for sensory scientists.
-
-```{r cider CA final, message = FALSE, fig.align='center', fig.width = 7, results = FALSE}
-raw_cider_data <- 
-  read_csv("data/CiderDryness_SensoryDATA.csv")
-
-cider_samples <-
-  raw_cider_data %>%
-  select(Sample_Name, Temperature) %>%
-  unite(Sample_Name, Temperature, col = "sample", sep = " ", remove = FALSE) %>%
-  distinct()
-
-ca_cider <- 
-  raw_cider_data %>%
-  select(Sample_Name, Temperature, Fresh_Apples:Synthetic) %>%
-  unite(Sample_Name, Temperature, col = "sample", sep = " ") %>%
-  group_by(sample) %>%
-  summarize(across(where(is.numeric), ~sum(.))) %>%
-  column_to_rownames("sample") %>%
-  FactoMineR::CA(graph = FALSE)
-
-ca_cider_coords <- 
-  ca_cider$row$coord %>%
-  as_tibble(rownames = "name") %>%
-  mutate(type = "row") %>%
-  bind_rows(
-    ca_cider$col$coord %>%
-      as_tibble(rownames = "name") %>%
-      mutate(type = "col")
-  ) %>%
-  left_join(cider_samples, join_by(name == sample)) %>%
-  mutate(name = if_else(is.na(Sample_Name), name, Sample_Name),
-         name = str_replace_all(name, "_", " "),
-         name = str_replace(name, "FullBodied", "Full Bodied"))
-
-nice_cider_labels <-
-  labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
-       y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
-       subtitle = "Correspondence Analysis biplot (symmetric)",
-       title = "Effect of cider serving temperature on consumer sensory perception")
-
-p2_ca_cider_cata <- 
-  ca_cider_coords %>%
-  mutate(font = if_else(type == "row", "plain", "italic")) %>%
-  ggplot(aes(x = `Dim 1`, y = `Dim 2`)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgrey") +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "darkgrey") +
-  geom_point(aes(color = type, shape = Temperature),
-             data = ca_cider_coords %>% filter(type == "row"),
-             size = 3) +
-  ggrepel::geom_text_repel(aes(label = name, color = type, fontface = font),
-                           show.legend = FALSE) +
-  coord_equal() + 
-  theme_linedraw() +
-  theme(legend.position = "bottom") +
-  nice_cider_labels + 
-  scale_color_manual(values = c("darkorange", "darkgreen")) +
-  scale_shape_manual(values = c(8, 16)) +
-  guides(shape = guide_legend(),
-         color = "none")
-
-p2_ca_cider_cata
-```
 
 ### "Publication quality"
 
@@ -239,15 +229,6 @@ Hmm.
 
 The motivating point, here, is to be able to make visualizations that accomplish what you want them to, rather than being at the mercy of packages that have certain defaults built in.
 
-```{r reset-the-environment, include=FALSE}
-rm(list = c("berry_penalty_analysis_data", 
-            "ca_cider", 
-            "cider_penalty_data", 
-            "cleaned_berry_data",
-            "raw_berry_data",
-            "raw_cider_data"))
-```
-
 ## Saving your data
 
 Often, you will have an ugly, raw data file.  You want to clean up this data file: remove junk variables, rename columns, omit outliers, and have something that is actually workable.  Sometimes, you create a new intermediate product (say, a penalty-analysis table) that you'd like to be able to share and work with elsewhere.  Now, you know how to do all that in `R`, often with fewer clicks and less effort than in Excel or other WYSIWYG tool.  But once you restart your `R` session, you will need to rerun this workflow, and you can't access your data products in other software.
@@ -256,7 +237,7 @@ To save this work, you can use `write.csv()` or `readr::write_csv()` and its rel
 
 ```{r demonstrating write_csv}
 # We will keep in the tidyverse idiom with readr::write_csv()
-write_csv(x = berry_penalty_data,
+write_csv(x = berry_penalty_analysis_data,
           file = "data/berry-penalty-data.csv")
 ```
 
@@ -269,20 +250,23 @@ Sometimes, we want to be able to save `R` data for re-loading later.  It's good 
 If you want to save a single `R` object, the `write_rds()` function saves an object into a native `R` data format: `.rds`.  This uses syntax similar to `write_csv()`:
 
 ```{r demonstrating write_rds}
-berry_penalty_data %>%
+berry_penalty_analysis_data %>%
   write_rds(file = "data/berry-penalty-data.rds")
 ```
 
 Often, though, it can be helpful to save multiple `R` objects so that a workplace can be restored.  In this case, the generic `save()` function will save a *list* of `R` objects provided as symbolic names into a file of format `.RData`, which can be restored with `load()`.  
 
 ```{r saving multiple data objects together}
-save(long_berry_data,
-     long_cider_data,
-     file = "data/long-data-objects.RData")
+save(berry_penalty_analysis_data,
+     ca_cider_coords,
+     ca_cider,
+     file = "data/workshop-data.RData")
 
-rm(long_berry_data, long_cider_data)
+rm(berry_penalty_analysis_data,
+     ca_cider_coords,
+     ca_cider)
 
-load(file = "data/long-data-objects.RData")
+load(file = "data/workshop-data.RData")
 ```
 
 This can be very helpful for sharing data.
