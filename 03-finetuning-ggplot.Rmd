@@ -4,32 +4,26 @@ output: html_document
 
 # Fine-Tuning Publication-Quality ggplots
 
-```{r setup-5, include = FALSE, purl = FALSE}
+```{r setup-3, include = FALSE, purl = FALSE}
 library(tidyverse)
 raw_berry_data <- read_csv("data/clt-berry-data.csv")
 raw_cider_data <- read_csv("data/CiderDryness_SensoryDATA.csv")
-load("data/svd-results.RData")
-load("data/cleaned-data.RData")
-load("data/long-data-objects.RData")
-load("data/goal-plot.RData")
+load("data/workshop-data.RData")
+load("data/goal-plots.RData")
 knitr::opts_chunk$set(fig.align = "center", warning = FALSE, message = FALSE)
 ```
 
-The plots we've been making so far are fairly straightforward demonstrations. At the very end of Chapter 3, we briefly showed you the code and results for this plot:
+The plots we've been making so far are fairly straightforward demonstrations. At the very end of Chapter 2, we briefly showed you the code and results for these two plots:
 
-```{r penalty analysis example, fig.width = 7}
+```{r pretty plot examples, fig.width = 7}
 p1_berry_penalty
+p2_ca_cider_cata
 ```
 
 Which uses some tricks from the `stringr` and `tidytext` packages in order to give us easy-to-read labels. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
 ```{r worse penalty analysis example, fig.width = 7}
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
-  mutate(penalty_lift = checked_1 - checked_0) %>%
   ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
   geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
   facet_wrap(~berry, scales = "free", nrow = 2) +
@@ -44,109 +38,42 @@ And we'll get there, but first...
 
 ## Exporting and Saving Plots
 
-It may seem like a weird time to be talking about saving plots, when we haven't gotten to the "fine-tuning" yet, but you should already be familiar with a few examples of things that change when the aspect ratio of the plot or the monitor you're viewing it on changes slightly. It is basically impossible to export a `ggplot` at the resolution needed for publishing without changing the aspect ratio, relative sizes, or space between some elements from what you're looking at in the Plots pane or the `.Rmd` chunk output.
+It may seem like a weird time to be talking about saving plots, when we haven't gotten to the "fine-tuning" yet, but you've already seen a few examples of things that change when the aspect ratio of the plot or the monitor you're viewing it on changes slightly. It is basically impossible to export a `ggplot` at the resolution needed for publishing without changing the aspect ratio, relative sizes, or space between some elements from what you're looking at in the Plots pane or the `.Rmd` chunk output.
 
 It's good practice to export your plot as an image (or pdf or knit-together document or however else you plan to export it) and re-export it periodically as you go through fine-tuning.
 
-This is also, probably, the most important part of this chapter. You will have to get every plot that you publish out of `R` somehow, after all! After that, we'll cover some tricks that we draw upon frequently, but you may find that you have different problems or priorities, or that some of these needs are situational.
+This is also, probably, the most important part of this chapter. You will have to get every plot that you publish out of `R` somehow, after all!
 
-But you will have to export plots for every project you want to share with the world.
+You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc. 
 
-### What format?
-
-You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc.
-
-There are two major ways to save the kind of spatial color data that comprise images such as graphs. You can store them as **vector graphics**, which can be rescaled because they're made up of lines and shapes (most commonly, `.pdf` and `.svg`) or as **raster (bitmap) graphics**, which store images as a grid of **pixels** which each have a single uniform color (most commonly, `.png` and `.jpeg`).
-
--  `.pdf` vector images are best for **LaTeX** and professional publishing
--  `.svg` vector images are more widely supported in word processors and websites
--  `.png` raster images are the most predictable to print, the best for web publishing, and can be used in pretty much every software ever made, *if* you know exactly the size you want. 
--  `.jpeg` (along with `.tiff`) raster images are the raster format preferred by *Food Quality and Preference* editors. They are worse for web publishing than `.png` but share its other advantages.
-
-Note that `ggsave()` is like making a `.pdf` version of your working documents: you will not be able to read the plot images into `R` for editing anymore, no matter which format you save in.
-
-### Exporting Images with `ggsave()` {#ggsave}
+### Exporting Images with `ggsave()` {- #ggsave}
 The easiest way to reproducibly save plots, so that all of your export options are in your code and you might be able to recreate it on a different computer, is with the function `ggplot2::ggsave()`, which works *similarly* to the `write_*()` functions and `save()`. You give it a file name to save to, relative to the current working directory, and then the variable where your plot is saved.
 
 ```{r ggsave}
-ggsave("img/penalty-lift-png.png", p1_berry_penalty)
+ggsave("img/penalty-lift.jpeg", p1_berry_penalty)
 ```
 
-`ggsave()` supports all of the above-named image formats, as well as `.eps`, `.ps`, `.tex` (pictex), and `.bmp`. It will figure out from the file extension (the stuff after the `.` in the `filename` argument) what image type it's saving as, but you can also specify it explicitly with the `device` argument.
+We saved our image as a JPEG file, because JPEG is one of the formats preferred by [Food Quality and Preference](https://www.sciencedirect.com/journal/food-quality-and-preference/publish/guide-for-authors#toc-51). `ggsave()` supports a wide variety of image formats and will automatically use the file type corresponding to the file extension (the stuff after the `.`) in the `filename` argument.
 
-If you're reading this right now, you're looking at a webpage created using `bookdown` and `knitr`. We can't actually directly embed `.pdf` images in this site, but let's look at a few other example formats using the same plots.
+Note that `ggsave()` is like making a `.pdf` version of your working documents: you will not be able to read the plot images into `R` for editing anymore, no matter which format you save in.
 
-```{r exporting a plot in multiple formats}
-ggsave("img/penalty-lift-svg.svg", p1_berry_penalty)
-ggsave("img/penalty-lift-jpeg.jpeg", p1_berry_penalty)
+The FQAP Guide for Authors also tells us that it wants combinations of lines and halftones, which will include most graphs, at a minimum of 500 dpi (dots per inch). A single column in a paper is about 3.55 inches or 90mm wide, so we need the image to be $3.55 \times 500 = 1775$ pixels wide. We'll start with a 3:2 aspect ratio and aim for $1775 \times 2 / 3 = 1183$ pixels tall.
+
+We specify the `height` and `width` of our plot in either inches or centimeters (using the `unit` argument) and then separately specify the `dpi`. It may take a few tries to output a plot that "looks right" with readable text, so fiddle with the `height` and `width` until it looks right and then set the `dpi` so that `width` $\times$ `dpi` $=$ at least the pixel width from above (here, 1775).
+
+```{r fqap-resolution}
+ggsave("img/penalty-lift-column-width.jpeg", p1_berry_penalty,
+       width = 6,
+       height = 4,
+       units = "in", #inches
+       dpi = 300) #slightly above 1775 / 6. Always err on the side of slightly too big!!
 ```
 
-Now let's compare how each of these looks! First, inside R:
-
-```{r viewing the plot inside R, fig.width = 7}
-p1_berry_penalty # If you're following along, this will look different in your R session!
-```
-
-The `.svg` image made by `ggsave()`:
-
-```{r svg plot, echo = FALSE, purl = FALSE, out.width = "672px"}
-knitr::include_graphics('img/penalty-lift-svg.svg')
-```
-
-The `.png` image made by `ggsave()`:
-
-```{r png plot, echo = FALSE, purl = FALSE, out.width = "672px"}
-knitr::include_graphics('img/penalty-lift-png.png')
-```
-
-The `.jpeg` image made by `ggsave()`:
-
-```{r jpeg plot, echo = FALSE, purl = FALSE, out.width = "672px"}
-knitr::include_graphics('img/penalty-lift-jpeg.jpeg')
-```
-
-The two raster formats look basically the same, and only slightly different from the `.svg` and the version in the `.html` version of this tutorial. If you're following along in your own `R` session, however, you'll notice that these saved plots all look more similar to each other than they do to the initial plot you're previewing inside `R`. *All* of the plots have a bit more space around the text using `ggsave()`, taller bars, and a different aspect ratio ($width/height$).
-
-We can adjust these using the rest of the arguments to `ggsave()`. The `width`, `height`, and `units` primarily control the image size (for raster images) and aspect ratio (for all images), but they also affect the relative size of plot elements. Larger plots will have axis labels, text, and `geom_*()`s that take up less of the overall plotting area, and vice-versa for smaller images.
-
-If you get to this stage with a **vector image** and realize that all of the fixed-size elements (e.g., text) are too big or too small, you can use `ggsave()`'s `scale` argument. `scale` < 1 makes all the fixed-size elements *smaller* relative to the plot size and `scale` > 1 makes all the elements *bigger* relative to the plot size. `scale` < 1 will generally also give you a *larger plot area* and *more space between your geoms*.
-
-```{r saving vector plots at different sizes and scales}
-ggsave("img/penalty-lift-svg-7x4.svg", p1_berry_penalty,
-       width = 7, height = 4, units = "in")
-
-ggsave("img/penalty-lift-svg-14x8.svg", p1_berry_penalty,
-       width = 14, height = 8, units = "in")
-
-ggsave("img/penalty-lift-svg-14x8-rescale.svg", p1_berry_penalty,
-       width = 14, height = 8, units = "in", scale = .5)
-```
-
-The 7x4" vector plot:
-
-```{r small vector plot, echo = FALSE, purl = FALSE, out.width = "672px"}
-knitr::include_graphics('img/penalty-lift-svg-7x4.svg')
-```
-
-The same plot saved at 14x8":
-
-```{r larger vector plot, echo = FALSE, purl = FALSE, out.width = "672px"}
-knitr::include_graphics('img/penalty-lift-svg-14x8.svg')
-```
-
-A 14.8" plot with `scale = 0.5`:
-
-```{r showing off vector plot rescaling, echo = FALSE, purl = FALSE, out.width = "672px"}
-knitr::include_graphics('img/penalty-lift-svg-14x8-rescale.svg')
-```
-
-All of these `.svg` images are *displayed* at 7x4" on your screen, but the plot we made with `width = 14, height = 8` has smaller text and larger plotting areas unless we correct this with `scale`. `penalty-lift-svg-7x4.svg` and `penalty-lift-svg-14x8-rescale.svg` are actually identical files.
-
-You should *avoid using `scale` for rasters*, as it will create plots that will not print at the size (`width` and `height`) and resolution (`dpi`) you specified. If you find yourself wanting to change the `scale` of a raster image, you should refer to the reference we've put together on `dpi` in the [Appendix](#ggresolution).
+We go into a lot more detail on common file types and image resolution math in the [Appendix](#ggformat).
 
 ### Other Image Export Options
 
-This is not a `knitr` or `bookdown` tutorial, because we had to choose our topics, but we used the `bookdown` package to make the [online webpage version of this tutorial](https://lhami.github.io/sensometrics-r-tutorial-2024/). It comes with its own advantages and challenges, but it does significantly streamline the image-generation process for any project where the only file you need is one LaTeX file, `.html` page, or `.pdf` output with all of the text and all of the figures. If that sounds appealing to you, turn your attention to ["bookdown: Authoring Books and Technical Documents with `R` Markdown" by Yihui Xie](https://bookdown.org/yihui/bookdown/).
+This is not a `knitr` or `bookdown` tutorial, but we used the `bookdown` package to make the [online webpage version of this tutorial](https://jlahne.github.io/pangborn-tutorial-2025/). It comes with its own advantages and challenges, but it does significantly streamline the image-generation process for any project where the only file you need is one LaTeX file, `.html` page, or `.pdf` output with all of the text and all of the figures. If that sounds appealing to you, turn your attention to ["bookdown: Authoring Books and Technical Documents with `R` Markdown" by Yihui Xie](https://bookdown.org/yihui/bookdown/).
 
 ## Making Text Look Okay
 
@@ -169,10 +96,6 @@ berry_penalty_analysis_data %>%
 
 ```{r replacing underscores with str_replace}
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
   mutate(cata_variable = str_replace_all(cata_variable, "_", ": "))
 ```
 
@@ -187,10 +110,6 @@ You can add multiple sets of `pattern`s and `replace`ments to `str_replace_all()
 
 ```{r fixing typos with str_replace}
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
   mutate(cata_variable = str_replace_all(cata_variable,
                                          c("shapre" = "shape",
                                            "appearane" = "appearance",
@@ -206,10 +125,6 @@ c("nocolor", "none", "cornonthecob", "anode") %>%
 
 #Or it can be useful for fixing lots of similar problems all at once
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
   mutate(cata_variable = str_replace_all(cata_variable,
                                          c("not" = "not ",
                                            "good" = "good ",
@@ -228,41 +143,15 @@ We have to **escape** the period (with an escaped backslash, technically, but fo
 
 Regex are extremely powerful tools for finding patterns in text, similar to the intuitive ways a human might recognize something like an email address, a measurement, or a parenthetical. We will not be talking about regex today, but if you want to see some examples and resources for learning how to use them, we've provided a short overview and links to some resources in the [Appendix](#regex).
 
-## Removing Legends and Plot Elements
+## Tweaking Legends
 
-You've already seen us use `+ theme(panel.grid = element_blank())` to get rid of the grid lines in a plot. You can use `element_blank()` to get rid of lots of plot elements you might not want for whatever reason, usually because it's redundant with information you have elsewhere and thus just making the plot look more complicated or harder to read at a glance. The most common things you might want to remove are:
-
-- `plot.title`, if some function added a title to the top of your plot and you want to get rid of it.
-- `axis.title`, `axis.title.x`, or `axis.title.y` if you don't need the column name(s) labeling your axes
-- `axis.ticks`, `axis.ticks.x`, or `axis.ticks.y` if you want to remove the little tick marks along a given axis (useful for bar plots)
-
-```{r removing the legend and the axis ticks}
-berry_long_liking %>%
-  ggplot(aes(x = Scale, y = Liking, color = Scale)) +
-  ggbeeswarm::geom_quasirandom() +
-  facet_wrap(~ Attribute) +
-  theme_bw() +
-  theme(panel.grid = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "none")
-```
-
-You can see a nearly-full list of the arguments to `ggplot2::theme()` in the theme help files (`?theme`), unlike with `ggplot2` aesthetics and the `geom_*()` help files.
-
-If you want to remove the legend, you use `+ theme(legend.position = "none")`, but if you want to remove *specific geoms* from the legend, then you have to adjust your `geom_*()` calls.
+You've already seen us use `+ theme(panel.grid = element_blank())` to get rid of the grid lines in a plot and `+ theme(legend.position = "none")` to get rid of the legend, but if you want to remove *specific geoms* from the legend, then you have to adjust your `geom_*()` calls.
 
 ```{r excluding geoms from the legend}
-ca_cider$col$coord %>%
-  as_tibble(rownames = "Attribute") %>%
-  mutate(Modality = case_when(Attribute == "Sweet" ~ "Taste",
-                              Attribute == "Bitter" ~ "Taste",
-                              Attribute == "Sour" ~ "Taste",
-                              Attribute == "Smooth" ~ "Mouthfeel",
-                              Attribute == "Dry" ~ "Mouthfeel",
-                              Attribute == "FullBodied" ~ "Mouthfeel",
-                              .default = "Aroma")) %>%
+ca_cider_coords %>%
+  filter(type == "col") %>%
   ggplot(aes(x = `Dim 1`, y = `Dim 2`,
-             label = Attribute, color = Modality)) -> ca_cider_colored
+             label = name, color = modality)) -> ca_cider_colored
 
 ca_cider_colored +
   geom_point() +
@@ -408,3 +297,132 @@ berry_penalty_analysis_data %>%
        title = "Penalty / Lift Analysis",
        subtitle = "displays the mean difference (within berries) for when a CATA variable is checked\nor un-checked")
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+## Combining Plots
+You've already seen how to `facet_*()` plots to view "small multiple" plots side-by side:
+
+```{r remember faceting, message = FALSE}
+raw_cider_data %>%
+  pivot_longer(Fresh_Apples:Synthetic) %>%
+  group_by(Sample_Name, Temperature, name) %>%
+  summarize(total = sum(value)) %>%
+  ggplot(aes(x = interaction(Sample_Name, Temperature), y = total)) + 
+  geom_col(aes(fill = Sample_Name)) +
+  scale_fill_manual(values = wesanderson::wes_palettes$FantasticFox1) + 
+  coord_flip() + 
+  labs(x = NULL, y = NULL, fill = NULL) +
+  theme_bw() + 
+  theme(legend.position = "top",
+        panel.grid = element_blank()) -> cider_count_plot
+
+cider_count_plot +
+  facet_wrap(~name, ncol = 6)
+```
+
+This works very well whenever you have multiple plots using the same `geom_*()`s that you want to show on the same axes, and you can even adjust the axis limits from facet to facet using `scales = "free*"`:
+
+```{r faceted plots with different x-axes}
+cider_count_plot +
+  facet_wrap(~name, ncol = 6,
+             scales = "free_x") # Each plot now has a different x-axis
+```
+
+Not that we'd argue you *should* here. Also, take note that the `x` in `free_x` refers to the horizontal axis in the final plot, *after* the `coord_flip()`, and *not* the `x` aesthetic we set in the `ggplot()` call.
+
+But if you have different plot types entirely (different data sources, different `geom_()`s, or different categorical axes) that you want to place side-by-side, say a loading plot and the product map resulting from a PCA or MFA, you're going to need something to paste together multiple `ggplot_()`s.
+
+The easiest way to do this is using `patchwork`, which will work on ggplots you've made yourself *or* with ones made by packages like `FactoMineR`. *When you have `patchwork` loaded*, the `+` operator will put two plots side-by-side:
+
+```{r combining plots with patchwork, fig.width=7, warning = FALSE}
+library(patchwork)
+plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all")
+```
+
+And the `/` operator will arrange two plots vertically:
+
+```{r arranging plots vertically with patchwork, fig.height=7, warning = FALSE}
+plot(berry_mfa_res, choix = "var") / plot(berry_mfa_res, partial = "all")
+```
+
+The advantage of doing this with a package like `patchwork`, rather than saving separate images, is that it aligns all of the plot areas precisely and that they will more easily move or rearrange certain plot elements like legends and axis labels.
+
+```{r collecting legends at the bottom of a patchwork ensemble, fig.width = 7, warning = FALSE}
+plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all") +
+  plot_layout(guides = "collect") &
+  theme(plot.title = element_blank(),
+        legend.position = "bottom")
+```
+
+The `&` operator lets you add elements like themes or annotations to all of the plots you've combined together. `plot_layout()` is a `patchwork` function that lets you set relative plot sizes, decide how to arrange more than 2 plots, and move legends:
+
+```{r more complex patchwork layout, fig.width = 7, warning = FALSE}
+plot(berry_mfa_res, partial = "all") +
+  (plot(berry_mfa_res, choix = "var") +
+  plot(berry_mfa_res, choix = "freq", invisible = "ind")) +
+  plot_layout(guides = "collect", ncol = 1, widths = 2) &
+  theme(plot.title = element_blank(),
+        axis.title = element_blank(),
+        legend.position = "bottom")
+```
+
+If you want to put images anywhere on a visualization, you're struggling to make a complex arrangement with `patchwork`, or you have an `R` `list` structure containing multiple plots (say, the result of a `for` loop, `*apply()`, or `nest()` call), then `cowplot` is another option:
+
+```{r plotting a list, fig.width = 7, warning = FALSE}
+berry_mfa_res$separate.analyses %>%
+  lapply(function(x) {
+    x$ind$coord %>%
+      as_tibble(rownames = "Berry") %>%
+      ggplot(aes(x = Dim.1, y = Dim.2)) +
+      geom_point()
+  }) %>%
+  cowplot::plot_grid(plotlist = ., labels = names(.))
+
+#You can also pipe your list into patchwork::wrap_plots()
+#if you have the latest version of patchwork.
+#It's a fairly new package, so it gains big new features very often.
+```
+
+Both of these packages can also add letters and other labels to each plot:
+
+```{r labeling plots, fig.width=7, warning = FALSE}
+plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all") +
+  plot_layout(guides = "collect") +
+  plot_annotation(tag_levels = 'A') &
+  theme(plot.title = element_blank(),
+        legend.position = "bottom")
+
+cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
+                   plot(berry_mfa_res, partial = "all"),
+                   labels = "AUTO")
+#Cowplot doesn't have a way to combine or move legends.
+#You'd have to move the legends *before* using plot_grid()
+```
+
+If you need to move or realign the labels so they're not overlapping anything, in `patchwork` you can add `theme(plot.tag.position = c(X, Y))` to individual plots with `+` or to the whole grouping of plots with `&`. The `cowplot::plot_grid()` function has arguments `labels_x` and `labels_y`, which let you adjust the distance from the bottom left hand corner of the figure.
+
+```{r moving plot labels, fig.width = 7, warning = FALSE}
+plot(berry_mfa_res, choix = "var") + theme(plot.tag.position = c(0.2, 0.95)) +
+  plot(berry_mfa_res, partial = "all") + theme(plot.tag.position = c(0.12, 0.95)) +
+  plot_layout(guides = "collect") +
+  plot_annotation(tag_levels = 'A') &
+  theme(plot.title = element_blank(),
+        legend.position = "bottom")
+
+cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
+                   plot(berry_mfa_res, partial = "all"),
+                   labels = "AUTO",
+                   label_y = 0.8)
+```
+
+You can also use any image editing, publishing, or graphics software to manually combine, arrange, and label plots, but if you need to make changes to a plot later then doing your layout *in `R`* will mean you just have to run the lightly-updated code again to re-export a fully formatted multi-part figure, even if the plot dimensions change.
