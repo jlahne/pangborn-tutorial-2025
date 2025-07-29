@@ -1,12 +1,11 @@
-delete_merged_file: true
+delete_merged_file: false
 new_session: yes
 rmd_files: ["index.Rmd",
-            "01-R-crash-course.Rmd",
-            "02-import-wrangle-export.Rmd",
-            "03-ggplot2-basics.Rmd",
+            "01-import-motivation-export.Rmd",
+            "02-ggplot2-basics.Rmd",
+            "03-finetuning-ggplot.Rmd",
             "04-ggplot2-extensions.Rmd",
-            "05-finetuning-ggplot.Rmd",
-            "06-conclusions.Rmd",
+            "05-conclusions.Rmd",
             "appendix.Rmd"]
 keep_md: false
 output_dir: "docs"
