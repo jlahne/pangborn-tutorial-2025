@@ -62,13 +62,16 @@ cider_samples <-
   unite(Sample_Name, Temperature, col = "sample", sep = " ", remove = FALSE) %>%
   distinct()
 
-ca_cider <- 
+cider_contingency <- 
   raw_cider_data %>%
   select(Sample_Name, Temperature, Fresh_Apples:Synthetic) %>%
   unite(Sample_Name, Temperature, col = "sample", sep = " ") %>%
   group_by(sample) %>%
   summarize(across(where(is.numeric), ~sum(.))) %>%
-  column_to_rownames("sample") %>%
+  column_to_rownames("sample")
+  
+ca_cider <- 
+  cider_contingency %>%
   FactoMineR::CA(graph = FALSE)
 
 ca_cider_coords <- 
@@ -160,15 +163,14 @@ cleaned_berry_data <-
 berry_penalty_analysis_data <- 
   cleaned_berry_data %>%
   group_by(berry, cata_variable, checked) %>%
-  summarize(penalty_lift = mean(rating),
+  summarize(rating = mean(rating),
             count = n()) %>%
-  ungroup() %>%
-  select(-count) %>%
   pivot_wider(names_from = checked,
-              values_from = penalty_lift,
+              values_from = c(rating, count),
               names_prefix = "checked_") %>%
-  group_by(berry, cata_variable) %>%
-  summarize(penalty_lift = checked_1 - checked_0) %>%
+  mutate(penalty_lift = rating_checked_1 - rating_checked_0,
+         count = count_checked_1, .keep = "none") %>%
+  ungroup() %>%
   # We can tidy up our CATA labels
   separate(cata_variable, 
            into = c("mode", "variable"), 
@@ -270,11 +272,13 @@ Often, though, it can be helpful to save multiple `R` objects so that a workplac
 save(berry_penalty_analysis_data,
      ca_cider_coords,
      ca_cider,
+     cider_contingency,
      file = "data/workshop-data.RData")
 
 rm(berry_penalty_analysis_data,
      ca_cider_coords,
-     ca_cider)
+     ca_cider,
+     cider_contingency)
 
 load(file = "data/workshop-data.RData")
 ```

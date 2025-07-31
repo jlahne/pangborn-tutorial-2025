@@ -340,7 +340,7 @@ p1_berry_penalty <-
   scale_fill_gradient(low = "tan", high = "darkgreen") + 
   labs(x = NULL, y = NULL,
        title = "Penalty / Lift Analysis",
-       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked\nor un-checked")
+       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked")
 
 p1_berry_penalty
 ```

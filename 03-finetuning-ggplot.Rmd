@@ -20,21 +20,9 @@ p1_berry_penalty
 p2_ca_cider_cata
 ```
 
-Which uses some tricks from the `stringr` and `tidytext` packages in order to give us easy-to-read labels. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+We're going to spend the rest of the workshop running through the tips and tricks we used to make these look polished. It's not an exhaustive list of the things you can change or tweak, though, so more than anything, we hope you walk away with the ability to identify what parts of a plot you want to change and the skills to figure out how to change it.
 
-```{r worse penalty analysis example, fig.width = 7}
-berry_penalty_analysis_data %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, scales = "free", nrow = 2) +
-  coord_flip() + 
-  theme_classic() + 
-  scale_fill_gradient(low = "tan", high = "darkgreen")
-```
-
-Which we're showing because we have seen similar plots published in journal articles, with the overlapping text, redundant axis labels, and all. We can make this more readable by reordering the CATA attributes, shortening and reformatting the labels, and possibly by removing some extraneous elements like the `cata_variable` label on the Y axis. These are common steps that make a huge difference.
-
-And we'll get there, but first...
+But first, something that everyone will need for almost every plot:
 
 ## Exporting and Saving Plots
 
@@ -44,10 +32,10 @@ It's good practice to export your plot as an image (or pdf or knit-together docu
 
 This is also, probably, the most important part of this chapter. You will have to get every plot that you publish out of `R` somehow, after all!
 
+### Exporting Images with `ggsave()` {- #ggsave}
 You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc. 
 
-### Exporting Images with `ggsave()` {- #ggsave}
-The easiest way to reproducibly save plots, so that all of your export options are in your code and you might be able to recreate it on a different computer, is with the function `ggplot2::ggsave()`, which works *similarly* to the `write_*()` functions and `save()`. You give it a file name to save to, relative to the current working directory, and then the variable where your plot is saved.
+The easiest way to reproducibly save plots, so that all of your export options are in your code and you might be able to recreate it on a different computer, is with the function `ggplot2::ggsave()`, which works *similarly* to the `write_*()` functions and `save()`. You give it a file name to save to, relative to the current working directory, and then the variable that has your ggplot.
 
 ```{r ggsave}
 ggsave("img/penalty-lift.jpeg", p1_berry_penalty)
@@ -57,31 +45,175 @@ We saved our image as a JPEG file, because JPEG is one of the formats preferred 
 
 Note that `ggsave()` is like making a `.pdf` version of your working documents: you will not be able to read the plot images into `R` for editing anymore, no matter which format you save in.
 
-The FQAP Guide for Authors also tells us that it wants combinations of lines and halftones, which will include most graphs, at a minimum of 500 dpi (dots per inch). A single column in a paper is about 3.55 inches or 90mm wide, so we need the image to be $3.55 \times 500 = 1775$ pixels wide. We'll start with a 3:2 aspect ratio and aim for $1775 \times 2 / 3 = 1183$ pixels tall.
+We can also specify the `width` and `height` of our plot in inches, centimeters, or several other possible `units`. Aside from the **aspect ratio** of height to width, the size also affects how large various elements *look*, since `geom_*()` and text sizes are ultimately defined as fractions of inches.
 
-We specify the `height` and `width` of our plot in either inches or centimeters (using the `unit` argument) and then separately specify the `dpi`. It may take a few tries to output a plot that "looks right" with readable text, so fiddle with the `height` and `width` until it looks right and then set the `dpi` so that `width` $\times$ `dpi` $=$ at least the pixel width from above (here, 1775).
+Start by exporting your file at different `width` and `height` combinations until it looks legible, with readable text and other elements.
+
+```{r ggsave-sized}
+ggsave("img/penalty-lift-6x4.jpeg", p1_berry_penalty,
+       width = 6,
+       height = 4,
+       units = "in") #inches
+```
+
+And then figure out the `dpi`, or number of dots per inch, needed to have a file that will print well. *Do not* just use the DPI you want to print at, especially if you're planning to use an image for a poster.
+
+The FQAP Guide for Authors also tells us that it wants "combination figures", which will include most graphs, at or above 500 dpi. A double column figure is about 7.5 inches or 190mm wide, so we need the image to be $7.5 \times 500 = 3750$ pixels wide. Since our nice plot had `height = 6`, we'll set the `dpi` so that $height \times dpi \geq 3750$.
 
 ```{r fqap-resolution}
-ggsave("img/penalty-lift-column-width.jpeg", p1_berry_penalty,
+ggsave("img/penalty-lift-double-column-width.jpeg", p1_berry_penalty,
        width = 6,
        height = 4,
        units = "in", #inches
-       dpi = 300) #slightly above 1775 / 6. Always err on the side of slightly too big!!
+       dpi = 650) #slightly above 3750 / 6. Always err on the side of slightly too big!!
 ```
 
 We go into a lot more detail on common file types and image resolution math in the [Appendix](#ggformat).
 
-### Other Image Export Options
+## Fine-tuning bar plots & facets with different categorical variables
 
-This is not a `knitr` or `bookdown` tutorial, but we used the `bookdown` package to make the [online webpage version of this tutorial](https://jlahne.github.io/pangborn-tutorial-2025/). It comes with its own advantages and challenges, but it does significantly streamline the image-generation process for any project where the only file you need is one LaTeX file, `.html` page, or `.pdf` output with all of the text and all of the figures. If that sounds appealing to you, turn your attention to ["bookdown: Authoring Books and Technical Documents with `R` Markdown" by Yihui Xie](https://bookdown.org/yihui/bookdown/).
+We'll start with the penalty analysis plot.
 
-## Making Text Look Okay
+`p1_berry_penalty` uses some tricks from the `stringr` and `tidytext` packages in order to give us easy-to-read labels. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+
+```{r worse penalty analysis example, fig.width = 7}
+berry_penalty_analysis_data %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry,) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+Which we're showing because we have seen similar plots published in journal articles, with the difficult-to-read axes, underscores, redundant axis labels, and all. We can make this more readable by reordering the CATA attributes, shortening and reformatting the labels, and possibly by removing some extraneous elements like the `cata_variable` label. These are common steps that make a huge difference.
+
+### Horizontal text with coord_flip()
+
+We've used `coord_flip()` a few times already, and it's pretty straightforward to use--you just have to add it to a `ggplot()` call and it'll make your `x` axis the vertical axis and your `y` axis the horizontal.
+
+```{r coord_flip}
+berry_penalty_analysis_data %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  theme_classic() +
+  coord_flip()
+```
+
+Even though the CATA attributes are still cramped and this isn't the best use of space, they're much easier to read now. If you've only got one categorical axis, it's almost always going to be more readable to have it be the *vertical axis* so that the text is horizontal.
+
+### Ordered Categorical Variables
+
+Many of the figures we've made so far have had an axis with a categorical variable. Have you figured out how `ggplot2` orders the levels of categorical variables? If you have noticed, it's likely because it's in a different order than the one we'd like.
+
+```{r default categorical axis in ggplot2}
+berry_penalty_analysis_data %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+The CATA attributes are in alphabetical order (with the start of the alphabet the closest to 0). This is how `ggplot2` treats all `character` variables, and you can exert some control over the ordering by turning the variable into an ordered `factor`.
+
+#### Specifying Ordinal Variables as Factors
+
+You can order variables by hand, if there's a particular order you have in mind:
+
+```{r manually making ordered factors}
+berry_penalty_analysis_data %>%
+  filter(str_detect(cata_variable, "taste")) %>%
+  mutate(cata_variable = factor(cata_variable,
+                                levels = c("taste_fruity",
+                                           "taste_melon", "taste_peachy", "taste_grapey", "taste_grape",
+                                           "taste_berry", "taste_cherry",
+                                           "taste_citrus", "taste_lemon",
+                                           "taste_tropical",
+                                           "taste_candy", "taste_caramel",
+                                           "taste_green", "taste_grassy", "taste_piney", "taste_minty",
+                                           "taste_earthy", "taste_fermented",
+                                           "taste_cinnamon", "taste_clove",
+                                           "taste_floral",
+                                           "taste_none"))) -> berry_penalty_manual_factors
+
+berry_penalty_manual_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+Note that the attribute you list *first* when you're specifying the `levels` will become 1, then 2, then 3. With `coord_flip()`, that puts it at the bottom of the plot.
+
+```{r showing the order of the factor}
+berry_penalty_manual_factors %>%
+  distinct(cata_variable) %>%
+  mutate(variable_number = as.numeric(cata_variable))
+```
+
+This gives us control, but it's pretty annoying to write out for large lists of attributes, and you have to be sure the spelling and capitalization match exactly. Often, like with the penalty analysis plots, what we actually want to do is order the Attributes in terms of some other numerical variable, like frequency or size of penalty.
+
+One way is to `arrange()` the data the way you want it and then use that order to specify the levels.
+
+```{r using another variable to order a factor}
+berry_penalty_analysis_data %>%
+  # Counting the number of times each attribute is used across all products:
+  group_by(cata_variable) %>%
+  mutate(variable_count = sum(count)) %>%
+  ungroup() %>%
+  # Arranging from least-to-most used:
+  arrange(variable_count) %>%
+  # Converting to a factor, so the least-used will be 1st, then the next:
+  mutate(cata_variable = factor(cata_variable, levels = unique(cata_variable),
+                            ordered = TRUE),
+         variable_number = as.numeric(cata_variable)) -> berry_penalty_frequency_factors
+
+#Now the plot:
+berry_penalty_frequency_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+#### Facets with Different Category-Orders
+
+You'll notice that our reordered categorical axes still have the same order across all of the plots. This would be true even if we used the within-product sums already in the `count` column to calculate `level`s. The order is based on factor levels, which are fixed within each column: `Fresh_Apples` can't be "more than" `Dry` in one part of the `cata_variable` column and "less than" in another part.
+
+On its own, `facet_wrap(..., scales = "free")` can drop unneeded attributes from plots, but it will still keep the same *order* of the attributes across all axes.
+
+```{r free scales on ordered data}
+berry_penalty_frequency_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+If you have a faceted plot and you want each facet to have a different ordering of the terms, like in our big penalty analysis example, you'll have to use `tidytext::reorder_within()`, `tidytext::scale_*_reordered()`, *and* `facet_wrap(..., scales = "free")`, all at once:
+
+```{r tidytext reordering within facets}
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(cata_variable_clean,
+                                                  by = count,
+                                                  within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  tidytext::scale_x_reordered() +
+  facet_wrap(~berry, scales = "free", nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+### Making labels look okay: Powerful text manipulation with `stringr`
 
 A good `R` variable or column name doesn't have any spaces or punctuation other than underscores (`_`) and dots (`.`), to avoid all those pesky backticks (`\``) in our code.
 
 This is very different from what a good label in a plot looks like. You'll often want to make some sort of mass changes to column names or text variables before plotting, in order to address this.
-
-### Powerful Text Manipulation with `stringr`
 
 The `stringr` package is a part of the `tidyverse`, so you have it already loaded whenever you run `library(tidyverse)`. It has a lot of useful functions for working with text (called "**str**ings" in many programming languages), mostly of the form `str_*()`. One thing you can do is change labels to uppercase, lowercase, "sentence case", or "title case" (first letter of each word capitalized), as appropriate:
 
@@ -143,9 +275,150 @@ We have to **escape** the period (with an escaped backslash, technically, but fo
 
 Regex are extremely powerful tools for finding patterns in text, similar to the intuitive ways a human might recognize something like an email address, a measurement, or a parenthetical. We will not be talking about regex today, but if you want to see some examples and resources for learning how to use them, we've provided a short overview and links to some resources in the [Appendix](#regex).
 
-## Tweaking Legends
+It's also very common that you may have variable names in one column which actually represent multiple variables, and may want to, say, color-code the modality of the cata variables so that appearance attributes are one color and taste attributes are another.
 
-You've already seen us use `+ theme(panel.grid = element_blank())` to get rid of the grid lines in a plot and `+ theme(legend.position = "none")` to get rid of the legend, but if you want to remove *specific geoms* from the legend, then you have to adjust your `geom_*()` calls.
+There are a few versions of the `tidyr::separate_wider_*()` function that can, for example, split the `cata_variable` column into two columns, one with everything *before* the **delimiter** (here, an underscore) and one with everything *after* the delimiter. Be very careful using `separate_wider_delim()` like this if some rows may have more underscores (or whatever your delimiter is) than others.
+
+```{r using separate to split one text column into multiple}
+berry_penalty_by_modality <- berry_penalty_analysis_data %>%
+  separate_wider_delim(cata_variable, "_",
+                       names = c("mode", "variable"),
+                       cols_remove = FALSE)
+
+berry_penalty_by_modality
+
+# Which would let you easily color-code your ggplot based on the new mode column
+
+berry_penalty_by_modality %>%
+  ggplot(aes(x = cata_variable, y = count, fill = mode)) +
+  geom_col() +
+  coord_flip()
+```
+(We'll get to the typo in just a second--you already know how to fix it, though!)
+
+If you want to put multiple columns of text *together*, you can use either `tidyr::unite()` or `stringr::str_c()` (string combine).
+
+```{r combining text columns}
+berry_penalty_by_modality %>%
+  mutate(cata_variable_2 = str_c(variable, mode, sep = " ")) %>%
+  unite(variable, mode, col = "cata_variable_3", sep = " ")
+```
+
+You may have noticed that `berry_penalty_analysis_data` has both `cata_variable` and `cata_variable_clean`, and that the latter is shorter, which fits better on the page. You now know all of the tricks that we used to get from one to the other:
+
+```{r using multiple string manipulations in practice}
+berry_penalty_analysis_data %>%
+  # Fixing typos
+  mutate(cata_variable = str_replace_all(cata_variable, c("appearane" = "appearance",
+                                                      "shapre" = "shape"))) %>%
+  # Separating the modality from the attribute name
+  separate_wider_delim(cata_variable, "_",
+                       names = c("mode", "variable"),
+                       cols_remove = FALSE) %>%
+  # Shorthand for the taste and appearance variables
+  mutate(mode = case_when(mode == "taste" ~ "(T)",
+                          mode == "appearance" ~ "(A)")) %>%
+  # Putting them back together
+  unite(variable, mode, col = "cata_variable_clean", sep = " ")
+```
+
+### Removing Plot Elements
+
+Plots are easiest to read when they have only the information that's actually relevant, so some labels and other elements that `ggplot2` adds by default can end up being extraneous and distracting.
+
+We covered using `theme()` to remove elements with `element_blank()` (e.g., `+ theme(panel.grid = element_blank())` to get rid of the grid lines), but there are some exceptions to this rule.
+
+When we're using `tidytext::reorder_within()` to order each individual facet from highest penalty to highest lift, any color-coding for the lift is redundant info and we don't really need a legend to spell it out:
+
+```{r redundant legend}
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white") + 
+  facet_wrap(~berry, scales = "free", nrow = 1) + 
+  coord_flip() + 
+  tidytext::scale_x_reordered()
+```
+
+We also don't really need the axis labels, since neither has units and anyone unfamiliar with a penalty-lift plot will need more explanation than an axis label can really provide, but `cata_variable_clean` is especially redundant.
+
+```{r removing the legend}
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white") + 
+  facet_wrap(~berry, scales = "free", nrow = 1) + 
+  coord_flip() + 
+  tidytext::scale_x_reordered() +
+  theme(axis.title.y = element_blank(),
+        legend.position = "none")
+```
+
+We can remove these both with one call to `theme()`, but the axis title is removed with `axis.title.y = element_blank()` and the legend is removed with `legend.position = "none"`. And, yes, that *is* `axis.title.y`, referring to the same `cata_variable_clean` axis that `scale_x_reordered()` is calling the x-axis.
+
+Some `ggplot2` functions will always refer to whatever you specified in `aes(x = ...)` as the x-axis, while some will refer to the *horizontal* axis as the x-axis, meaning that `coord_flip()` can make things confusing. It's not worth trying to memorize or find patterns--this is something you'll have to tweak by trial and error.
+
+Sometimes, there are multiple ways of removing a plot element, and whichever one you remember is fine to use. One notable example that may save you some typing is the `labs()` function, which lets you label the `x` and `y` axes, the whole plot `title`, and so on with a slightly easier-to-remember interface than `theme()`. Setting any of the `labs()` arguments `= NULL` will remove it from the plot.
+
+```{r removing the legend}
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white") + 
+  facet_wrap(~berry, scales = "free", nrow = 1) + 
+  coord_flip() + 
+  tidytext::scale_x_reordered() +
+  labs(x = NULL, y = "Penalty",
+       title = "Penalty / Lift Analysis",
+       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked")
+```
+
+Note that, unlike `theme()`, `labs(x = ...)` refers to the same `x` as `aes(x = ...)`.
+
+### Putting it all together
+
+Now, at long last, we're ready to walk line-by-line through the example penalty analysis figure that we've just been copy-pasting so far in the workshop.
+
+```{r final walkthrough of penalty analysis, fig.width = 7}
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white") + 
+  facet_wrap(~berry, scales = "free", nrow = 1) + 
+  tidytext::scale_x_reordered() + 
+  coord_flip() + 
+  theme_classic() + 
+  scale_fill_gradient(low = "tan", high = "darkgreen") + 
+  labs(title = "Penalty / Lift Analysis",
+       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked") +
+  theme(axis.title = element_blank(),
+        legend.position = "none")
+```
+
+## Fine-tuning biplots with different types of variables
+
+`p2_ca_cider_cata` has a lot of different aesthetics, some of . Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+
+```{r worse penalty analysis example, fig.width = 7}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw() + 
+  scale_color_manual(values = c("darkorange", "darkgreen"))
+```
+
+### Tweaking legends
+
+If you want to remove *specific geoms* from the legend, then you have to adjust your `geom_*()` calls.
 
 ```{r excluding geoms from the legend}
 ca_cider_coords %>%
@@ -162,267 +435,91 @@ ca_cider_colored +
   ggrepel::geom_text_repel(show.legend = FALSE)
 ```
 
-## Ordered Categorical Variables
+### Axis and plot labels based on variables
 
-Many of the figures we've made so far have had one axis with a categorical variable. Have you figured out how `ggplot2` orders the levels of categorical variables? If you have noticed, it's likely because it's in a different order than the one we'd like.
+The `FactoMineR` plot we briefly showed in [Chapter 1](#pubquality) included the percentage of inertia explained by each dimension *in the axis labels*, which is extremely nice, even though it's difficult to adjust the `FactoMineR` plot directly.
 
-```{r default categorical axis in ggplot2}
-long_cider_data %>%
-  filter(checked == 1) %>%
-  ggplot(aes(x = cata_variable)) +
-  geom_bar() +
-  coord_flip() +
-  facet_grid(vars(Temperature), vars(Sample_Name))
+The `FactoMineR::CA()` function gives us all of the information we need to add this to our ggplot, and in our data set it's saved in the `ca_cider$eig` matrix.
+
+```{r matrix of eigenvalues and intertia from FactoMineR}
+ca_cider$eig #the second column has the percentage of variance explained by each dimension
 ```
 
-The CATA attributes are in alphabetical order. This is how `ggplot2` treats all `character` variables, and you can exert some control over the ordering by turning the variable into an ordered `factor`.
+if you give `str_c()` multiple vectors with the same length, it'll combine the first element of the first vector with the first element of the second vector, and so on. So we could easily make a list of plot labels for each axis we have:
 
-### Specifying Ordinal Variables as Factors
+```{r list of axis names with str_c}
+str_c(rownames(ca_cider$eig),
+      " (", # you'll need to add the symbols yourself, including spaces
+      round(ca_cider$eig[, 2], 1),
+      "%)")
 
-You can order variables by hand, if there's a particular order you have in mind:
-
-```{r manually making ordered factors}
-long_cider_data %>%
-  mutate(cata_variable = factor(cata_variable,
-                                levels = c("Sweet", "Sour", "Bitter",
-                                           "Smooth", "Dry", "FullBodied",
-                                           "Light",
-                                           "Fruity", "Berries", "Fresh_Apples",
-                                           "Floral", "Spice",
-                                           "Herbal", "Woody", "Earthy",
-                                           "Funky", "Fermented", "Vomit",
-                                           "Synthetic", "Candy",
-                                           "Metallic", "Alcohol"))) -> long_cider_manual_factors
-
-long_cider_manual_factors %>%
-  filter(checked == 1) %>%
-  ggplot(aes(x = cata_variable)) +
-  geom_bar() +
-  coord_flip() +
-  facet_grid(vars(Temperature), vars(Sample_Name))
+# Or you can do it one at a time:
+str_c("Dimension 1 (",
+      round(ca_cider$eig[1, 2], 1),
+      "% of intertia)")
+str_c("Dimension 2 (",
+      round(ca_cider$eig[2, 2], 1),
+      "% of intertia)")
 ```
 
-Note that the attribute you list *first* when you're specifying the `levels` will become 1, then 2, then 3. With `coord_flip()`, that puts it at the bottom of the plot.
+To add it to the plot, we can use the `labs()` function, which lets you label the `x` and `y` axes, the whole plot `title`, and so on.
 
-```{r showing the order of the factor}
-long_cider_manual_factors %>%
-  distinct(cata_variable) %>%
-  mutate(variable_number = as.numeric(cata_variable))
-```
-
-This gives us control, but it's pretty annoying to write out for large lists of attributes, and you have to be sure the spelling and capitalization match exactly. Often, like with the penalty analysis plots, what we actually want to do is order the Attributes in terms of some other numerical variable, like frequency or size of penalty.
-
-One way is to `arrange()` the data the way you want it and then use that order to specify the levels.
-
-```{r using another variable to order a factor}
-long_cider_data %>%
-  # Counting the number of times each attribute is used across all products:
-  group_by(cata_variable) %>%
-  mutate(variable_count = sum(checked)) %>%
-  ungroup() %>%
-  # Arranging from least-to-most used:
-  arrange(variable_count) %>%
-  # Converting to a factor, so the least-used will be 1st, then the next:
-  mutate(cata_variable = factor(cata_variable, levels = unique(cata_variable),
-                            ordered = TRUE),
-         variable_number = as.numeric(cata_variable)) -> long_cider_frequency_factors
-
-#Now the plot:
-long_cider_frequency_factors %>%
-  filter(checked == 1) %>%
-  ggplot(aes(x = cata_variable)) +
-  geom_bar() +
-  coord_flip() +
-  facet_grid(vars(Temperature), vars(Sample_Name))
-```
-
-### Facets with Different Category-Orders
-
-You'll notice that our reordered categorical axes still have the same order across all of the plots. This would be true even if we changed our `group_by()` call and used within-product sums to calculate `level`s. The order is based on factor levels for a single column, and `Fresh_Apples` can't be "more than" `Dry` in one part of the column and "less than" in another part.
-
-On its own, `facet_wrap(..., scales = "free")` can drop unneeded attributes from plots, but it will still keep the same *order* of the attributes across all axes.
-
-If you have a faceted plot and you want each facet to have a different ordering of the terms, like in our big penalty analysis example, you'll have to use `tidytext::reorder_within()`, `tidytext::scale_*_reordered()`, *and* `facet_wrap(..., scales = "free")`, all at once:
-
-```{r tidytext reordering within facets}
-long_cider_data %>%
-  # Counting the number of times each attribute is used across all products:
-  group_by(Sample_Name, Temperature, cata_variable) %>%
-  mutate(Product = str_c(Sample_Name, " (", Temperature, ")"),
-         variable_count = sum(checked),
-         cata_variable = tidytext::reorder_within(cata_variable,
-                                                  by = variable_count,
-                                                  within = list(Sample_Name, Temperature))) %>%
-  ungroup() %>%
-  filter(checked == 1) %>%
-  ggplot(aes(x = cata_variable)) +
-  geom_bar() +
-  tidytext::scale_x_reordered() +
-  coord_flip() +
-  # This will not work with facet_grid, because it forces all plots in a row to
-  # share a vertical axis, even with scales = "free"
-  facet_wrap(~ Product,
-             scales = "free")
-```
-
-## Putting it all together
-
-Now, at long last, we're ready to walk line-by-line through the example penalty analysis figure that we've just been copy-pasting so far in the workshop.
-
-```{r final walkthrough of penalty analysis, fig.width = 7}
-berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
-  separate(cata_variable, 
-           into = c("mode", "variable"), 
-           sep = "_") %>%
-  mutate(penalty_lift = checked_1 - checked_0,
-         mode = case_when(mode == "taste" ~ "(T)",
-                          mode == "appearance" ~ "(A)",
-                          mode == "appearane" ~ "(A)")) %>%
-  unite(variable, mode, col = "cata_variable", sep = " ") %>%
-  mutate(cata_variable = tidytext::reorder_within(x = cata_variable,
-                                                  by = penalty_lift,
-                                                  within = berry)) %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, scales = "free", nrow = 1) + 
-  tidytext::scale_x_reordered() + 
-  coord_flip() + 
-  theme_classic() + 
-  scale_fill_gradient(low = "tan", high = "darkgreen") + 
-  labs(x = NULL, y = NULL,
-       title = "Penalty / Lift Analysis",
-       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked\nor un-checked")
-```
-
-
-
-
-
-
-
-
-
-
-
-
-## Combining Plots
-You've already seen how to `facet_*()` plots to view "small multiple" plots side-by side:
-
-```{r remember faceting, message = FALSE}
-raw_cider_data %>%
-  pivot_longer(Fresh_Apples:Synthetic) %>%
-  group_by(Sample_Name, Temperature, name) %>%
-  summarize(total = sum(value)) %>%
-  ggplot(aes(x = interaction(Sample_Name, Temperature), y = total)) + 
-  geom_col(aes(fill = Sample_Name)) +
-  scale_fill_manual(values = wesanderson::wes_palettes$FantasticFox1) + 
-  coord_flip() + 
-  labs(x = NULL, y = NULL, fill = NULL) +
+```{r making wordy axis labels}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
   theme_bw() + 
-  theme(legend.position = "top",
-        panel.grid = element_blank()) -> cider_count_plot
-
-cider_count_plot +
-  facet_wrap(~name, ncol = 6)
+  scale_color_manual(values = c("darkorange", "darkgreen")) +
+  labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
+       y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
+       subtitle = "Correspondence Analysis biplot (symmetric)",
+       #if you want to insert a line break, you can use `\n`:
+       title = "Effect of cider serving temperature on consumer sensory perception\nbased on CATA data")
 ```
 
-This works very well whenever you have multiple plots using the same `geom_*()`s that you want to show on the same axes, and you can even adjust the axis limits from facet to facet using `scales = "free*"`:
+### Setting up the Cartesian plane
 
-```{r faceted plots with different x-axes}
-cider_count_plot +
-  facet_wrap(~name, ncol = 6,
-             scales = "free_x") # Each plot now has a different x-axis
+You may have noticed that `ggplot2` doesn't give any particular weight to the origin, or the gridlines that pass through it, even though (0,0) is often meaningful and we may want to see which points are positive or negative at a glance. Removing all gridlines or using `theme_void()` removes the x- and y-axes as well!
+
+The easiest way to address this is just to add two lines that are thicker/darker/different at $y = 0$ and $x = 0$, which we can do by adding more `geom_*()`s...
+
+```{r using geom_vline and geom_hline at the end}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_void() +
+  geom_vline(xintercept = 0, color = "grey", linewidth = 1) +
+  geom_hline(yintercept = 0, color = "grey", linewidth = 1)
 ```
 
-Not that we'd argue you *should* here. Also, take note that the `x` in `free_x` refers to the horizontal axis in the final plot, *after* the `coord_flip()`, and *not* the `x` aesthetic we set in the `ggplot()` call.
+But if you aren't careful and add them *after* your other geoms, it will add them *on top* of the rest of the plot. In general, you should go ahead and add your axis lines right after calling `ggplot()`, before anything else, so that they're drawn on first and every other `geom_*()` goes on top of it.
 
-But if you have different plot types entirely (different data sources, different `geom_()`s, or different categorical axes) that you want to place side-by-side, say a loading plot and the product map resulting from a PCA or MFA, you're going to need something to paste together multiple `ggplot_()`s.
-
-The easiest way to do this is using `patchwork`, which will work on ggplots you've made yourself *or* with ones made by packages like `FactoMineR`. *When you have `patchwork` loaded*, the `+` operator will put two plots side-by-side:
-
-```{r combining plots with patchwork, fig.width=7, warning = FALSE}
-library(patchwork)
-plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all")
+```{r using geom_vline and geom_hline at the beginning}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_void()
 ```
 
-And the `/` operator will arrange two plots vertically:
+You can also make your plot more intuitive to read by ensuring that 1 unit of the x-axis is the same distance as one unit on the y-axis, using `coord_equal()`.
 
-```{r arranging plots vertically with patchwork, fig.height=7, warning = FALSE}
-plot(berry_mfa_res, choix = "var") / plot(berry_mfa_res, partial = "all")
+```{r using geom_vline and geom_hline at the beginning}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw() +
+  coord_equal()
 ```
 
-The advantage of doing this with a package like `patchwork`, rather than saving separate images, is that it aligns all of the plot areas precisely and that they will more easily move or rearrange certain plot elements like legends and axis labels.
+This will often make plots resulting from SVD wider than they are tall, since the 1st dimension will definitionally explain more variation in the data.
 
-```{r collecting legends at the bottom of a patchwork ensemble, fig.width = 7, warning = FALSE}
-plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all") +
-  plot_layout(guides = "collect") &
-  theme(plot.title = element_blank(),
-        legend.position = "bottom")
-```
+### Using only part of the dataset for each geom
 
-The `&` operator lets you add elements like themes or annotations to all of the plots you've combined together. `plot_layout()` is a `patchwork` function that lets you set relative plot sizes, decide how to arrange more than 2 plots, and move legends:
-
-```{r more complex patchwork layout, fig.width = 7, warning = FALSE}
-plot(berry_mfa_res, partial = "all") +
-  (plot(berry_mfa_res, choix = "var") +
-  plot(berry_mfa_res, choix = "freq", invisible = "ind")) +
-  plot_layout(guides = "collect", ncol = 1, widths = 2) &
-  theme(plot.title = element_blank(),
-        axis.title = element_blank(),
-        legend.position = "bottom")
-```
-
-If you want to put images anywhere on a visualization, you're struggling to make a complex arrangement with `patchwork`, or you have an `R` `list` structure containing multiple plots (say, the result of a `for` loop, `*apply()`, or `nest()` call), then `cowplot` is another option:
-
-```{r plotting a list, fig.width = 7, warning = FALSE}
-berry_mfa_res$separate.analyses %>%
-  lapply(function(x) {
-    x$ind$coord %>%
-      as_tibble(rownames = "Berry") %>%
-      ggplot(aes(x = Dim.1, y = Dim.2)) +
-      geom_point()
-  }) %>%
-  cowplot::plot_grid(plotlist = ., labels = names(.))
-
-#You can also pipe your list into patchwork::wrap_plots()
-#if you have the latest version of patchwork.
-#It's a fairly new package, so it gains big new features very often.
-```
-
-Both of these packages can also add letters and other labels to each plot:
-
-```{r labeling plots, fig.width=7, warning = FALSE}
-plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all") +
-  plot_layout(guides = "collect") +
-  plot_annotation(tag_levels = 'A') &
-  theme(plot.title = element_blank(),
-        legend.position = "bottom")
-
-cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
-                   plot(berry_mfa_res, partial = "all"),
-                   labels = "AUTO")
-#Cowplot doesn't have a way to combine or move legends.
-#You'd have to move the legends *before* using plot_grid()
-```
-
-If you need to move or realign the labels so they're not overlapping anything, in `patchwork` you can add `theme(plot.tag.position = c(X, Y))` to individual plots with `+` or to the whole grouping of plots with `&`. The `cowplot::plot_grid()` function has arguments `labels_x` and `labels_y`, which let you adjust the distance from the bottom left hand corner of the figure.
-
-```{r moving plot labels, fig.width = 7, warning = FALSE}
-plot(berry_mfa_res, choix = "var") + theme(plot.tag.position = c(0.2, 0.95)) +
-  plot(berry_mfa_res, partial = "all") + theme(plot.tag.position = c(0.12, 0.95)) +
-  plot_layout(guides = "collect") +
-  plot_annotation(tag_levels = 'A') &
-  theme(plot.title = element_blank(),
-        legend.position = "bottom")
-
-cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
-                   plot(berry_mfa_res, partial = "all"),
-                   labels = "AUTO",
-                   label_y = 0.8)
-```
-
-You can also use any image editing, publishing, or graphics software to manually combine, arrange, and label plots, but if you need to make changes to a plot later then doing your layout *in `R`* will mean you just have to run the lightly-updated code again to re-export a fully formatted multi-part figure, even if the plot dimensions change.

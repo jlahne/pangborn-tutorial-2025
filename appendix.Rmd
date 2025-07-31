@@ -120,6 +120,124 @@ ca_cider_biplot_facto +
 
 If you desperately need to [change a scale or reorder `geom_*()`s from an existing `ggplot`](https://cran.r-project.org/web/packages/gginnards/vignettes/user-guide-2.html#replacing-scales-coordinates-whole-themes-and-data.) in a hurry, look into the `gginnards` package.
 
+## Combining Plots {-}
+During the workshop, we showed how to use `facet_*()` to view "small multiple" plots side-by side:
+
+```{r remember faceting, message = FALSE}
+raw_cider_data %>%
+  pivot_longer(Fresh_Apples:Synthetic) %>%
+  group_by(Sample_Name, Temperature, name) %>%
+  summarize(total = sum(value)) %>%
+  ggplot(aes(x = interaction(Sample_Name, Temperature), y = total)) + 
+  geom_col(aes(fill = Sample_Name)) +
+  scale_fill_manual(values = wesanderson::wes_palettes$FantasticFox1) + 
+  coord_flip() + 
+  labs(x = NULL, y = NULL, fill = NULL) +
+  theme_bw() + 
+  theme(legend.position = "top",
+        panel.grid = element_blank()) -> cider_count_plot
+
+cider_count_plot +
+  facet_wrap(~name, ncol = 6)
+```
+
+This works very well whenever you have multiple plots using the same `geom_*()`s that you want to show on the same axes, and you can even adjust the axis limits from facet to facet using `scales = "free*"`:
+
+```{r faceted plots with different x-axes}
+cider_count_plot +
+  facet_wrap(~name, ncol = 6,
+             scales = "free_x") # Each plot now has a different x-axis
+```
+
+Not that we'd argue you *should* here. Also, take note that the `x` in `free_x` refers to the horizontal axis in the final plot, *after* the `coord_flip()`, and *not* the `x` aesthetic we set in the `ggplot()` call.
+
+But if you have different plot types entirely (different data sources, different `geom_()`s, or different categorical axes) that you want to place side-by-side, say a loading plot and the product map resulting from a PCA or MFA, you're going to need something to paste together multiple `ggplot_()`s.
+
+The easiest way to do this is using `patchwork`, which will work on ggplots you've made yourself *or* with ones made by packages like `FactoMineR`. *When you have `patchwork` loaded*, the `+` operator will put two plots side-by-side:
+
+```{r combining plots with patchwork, fig.width=7, warning = FALSE}
+library(patchwork)
+plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all")
+```
+
+And the `/` operator will arrange two plots vertically:
+
+```{r arranging plots vertically with patchwork, fig.height=7, warning = FALSE}
+plot(berry_mfa_res, choix = "var") / plot(berry_mfa_res, partial = "all")
+```
+
+The advantage of doing this with a package like `patchwork`, rather than saving separate images, is that it aligns all of the plot areas precisely and that they will more easily move or rearrange certain plot elements like legends and axis labels.
+
+```{r collecting legends at the bottom of a patchwork ensemble, fig.width = 7, warning = FALSE}
+plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all") +
+  plot_layout(guides = "collect") &
+  theme(plot.title = element_blank(),
+        legend.position = "bottom")
+```
+
+The `&` operator lets you add elements like themes or annotations to all of the plots you've combined together. `plot_layout()` is a `patchwork` function that lets you set relative plot sizes, decide how to arrange more than 2 plots, and move legends:
+
+```{r more complex patchwork layout, fig.width = 7, warning = FALSE}
+plot(berry_mfa_res, partial = "all") +
+  (plot(berry_mfa_res, choix = "var") +
+  plot(berry_mfa_res, choix = "freq", invisible = "ind")) +
+  plot_layout(guides = "collect", ncol = 1, widths = 2) &
+  theme(plot.title = element_blank(),
+        axis.title = element_blank(),
+        legend.position = "bottom")
+```
+
+If you want to put images anywhere on a visualization, you're struggling to make a complex arrangement with `patchwork`, or you have an `R` `list` structure containing multiple plots (say, the result of a `for` loop, `*apply()`, or `nest()` call), then `cowplot` is another option:
+
+```{r plotting a list, fig.width = 7, warning = FALSE}
+berry_mfa_res$separate.analyses %>%
+  lapply(function(x) {
+    x$ind$coord %>%
+      as_tibble(rownames = "Berry") %>%
+      ggplot(aes(x = Dim.1, y = Dim.2)) +
+      geom_point()
+  }) %>%
+  cowplot::plot_grid(plotlist = ., labels = names(.))
+
+#You can also pipe your list into patchwork::wrap_plots()
+#if you have the latest version of patchwork.
+#It's a fairly new package, so it gains big new features very often.
+```
+
+Both of these packages can also add letters and other labels to each plot:
+
+```{r labeling plots, fig.width=7, warning = FALSE}
+plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all") +
+  plot_layout(guides = "collect") +
+  plot_annotation(tag_levels = 'A') &
+  theme(plot.title = element_blank(),
+        legend.position = "bottom")
+
+cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
+                   plot(berry_mfa_res, partial = "all"),
+                   labels = "AUTO")
+#Cowplot doesn't have a way to combine or move legends.
+#You'd have to move the legends *before* using plot_grid()
+```
+
+If you need to move or realign the labels so they're not overlapping anything, in `patchwork` you can add `theme(plot.tag.position = c(X, Y))` to individual plots with `+` or to the whole grouping of plots with `&`. The `cowplot::plot_grid()` function has arguments `labels_x` and `labels_y`, which let you adjust the distance from the bottom left hand corner of the figure.
+
+```{r moving plot labels, fig.width = 7, warning = FALSE}
+plot(berry_mfa_res, choix = "var") + theme(plot.tag.position = c(0.2, 0.95)) +
+  plot(berry_mfa_res, partial = "all") + theme(plot.tag.position = c(0.12, 0.95)) +
+  plot_layout(guides = "collect") +
+  plot_annotation(tag_levels = 'A') &
+  theme(plot.title = element_blank(),
+        legend.position = "bottom")
+
+cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
+                   plot(berry_mfa_res, partial = "all"),
+                   labels = "AUTO",
+                   label_y = 0.8)
+```
+
+You can also use any image editing, publishing, or graphics software to manually combine, arrange, and label plots, but if you need to make changes to a plot later then doing your layout *in `R`* will mean you just have to run the lightly-updated code again to re-export a fully formatted multi-part figure, even if the plot dimensions change.
+
 ## Image File Types, Sizes, and Resolutions {- #ggformat}
 
 ### What image format? {-}
@@ -273,6 +391,10 @@ You can see that all of the 7x4" raster plots look basically the same, except th
 Unlike `scale`, the `dpi` argument does not resize any of the text or geoms (it doesn't change the size of a "point" from 1/72"). But let's say we need a 300 dpi copy of this image printed at 14x8". We already know that the 14x8" output has text that's too small to read from afar.
 
 In cases like these, it may be easier to output a size with the right *aspect ratio* that looks good and is legible, then figure out what `dpi` you'll need to print it. If we need a 14x8" plot at 300 dpi, that's $14 \times 300 = 4200$ pixels wide by $8 \times 300 = 2400$ tall. We can fake this with our 7x4" plot at 600 dpi, since $4200 / 7 = 600$ and $2400 / 4 = 600$.
+
+### Other Image Export Options
+
+This is not a `knitr` or `bookdown` tutorial, but we used the `bookdown` package to make the [online webpage version of this tutorial](https://jlahne.github.io/pangborn-tutorial-2025/). It comes with its own advantages and challenges, but it does significantly streamline the image-generation process for any project where the only file you need is one LaTeX file, `.html` page, or `.pdf` output with all of the text and all of the figures. If that sounds appealing to you, turn your attention to ["bookdown: Authoring Books and Technical Documents with `R` Markdown" by Yihui Xie](https://bookdown.org/yihui/bookdown/).
 
 ## Regular Expressions {- #regex}
 A regular expression, or regex, is a way of compactly writing a `pattern` that will let you match similarly-structured pieces of text. You may use regex because you want the list of matches itself, because you want to do something to pieces of text with a certain pattern somewhere in them, or because you want to replace all matches with something else. Regex were originally designed in the 1980s, and are also a central part of the design of the `stringr` package (although `stringr` still has a lot of useful tools without them).
