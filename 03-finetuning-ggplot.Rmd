@@ -88,7 +88,7 @@ We'll start with the penalty analysis plot.
 
 `p1_berry_penalty` uses some tricks from the `stringr` and `tidytext` packages in order to give us easy-to-read labels. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
-```{r worse penalty analysis example, fig.width = 7}
+```{r worse berry penalty analysis example, fig.width = 7}
 berry_penalty_analysis_data %>%
   ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
   geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
@@ -423,7 +423,7 @@ berry_penalty_analysis_data %>%
 
 `p2_ca_cider_cata` has a lot of different aesthetics, some of . Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
-```{r worse penalty analysis example, fig.width = 7}
+```{r worse cider CA example, fig.width = 7}
 draft_cider_plot <- ca_cider_coords %>%
   ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
   geom_point() +
@@ -499,7 +499,7 @@ ca_cider_coords %>%
 
 You can also make your plot more intuitive to read by ensuring that 1 unit of the x-axis is the same distance as one unit on the y-axis, using `coord_equal()`.
 
-```{r using geom_vline and geom_hline at the beginning}
+```{r making axes equally scaled}
 ca_cider_coords %>%
   ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
   geom_vline(xintercept = 0) +
@@ -571,7 +571,7 @@ ca_cider_coords %>%
 
 It's also common for row and column biplots to use different text styling for the row and column *variables*. Based on what you know so far, since we have the row/column designation in the `type` column, you might start out trying to set the `fontface` aesthetic like this:
 
-```{r naive approach to fontface error=TRUE}
+```{r naive approach to fontface, error=TRUE}
 ca_cider_coords %>%
   ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
   geom_point() +
@@ -604,7 +604,8 @@ nice_cider_labels <-
        subtitle = "Correspondence Analysis biplot (symmetric)",
        title = "Effect of cider serving temperature on consumer sensory perception")
 
-ca_cider_coords %>%
+ca_cider_termplot <-
+  ca_cider_coords %>%
   mutate(font = if_else(type == "row", "plain", "italic")) %>%
   ggplot(aes(x = `Dim 1`, y = `Dim 2`)) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "darkgrey") +
@@ -622,4 +623,8 @@ ca_cider_coords %>%
   scale_shape_manual(values = c(8, 16)) +
   guides(shape = guide_legend(),
          color = "none")
+
+ca_cider_termplot
+
+save(ca_cider_termplot, file = "data/ca_cider_termplot.RData")
 ```

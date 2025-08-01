@@ -229,6 +229,8 @@ ca_cider_coords %>%
 
 <img src="02-ggplot2-basics_files/figure-html/using theme-1.png" width="672" style="display: block; margin: auto;" />
 
+You can see a nearly-full list of the arguments to `ggplot2::theme()` in the theme help files (`?theme`), unlike with `ggplot2` aesthetics and the `geom_*()` help files.
+
 Many calls to `theme()` involve `element_*()` functions.  When we remove elements, for example, we use `element_blank()` (not, for example, `NA` or `NULL` as we typically would in other parts of `R`).
 
 When we want to change how our text is formatted (not the values, but the formatting), we use `element_text()` calls.
@@ -399,59 +401,22 @@ Now we are prepared to walk through the entire workflow:
 
 
 ``` r
-# First we wrangle our data using the tools we've learned to get penalties/lifts
-# for each attributes
-berry_penalty_analysis_data <- 
-  berry_long_cata %>%
-  group_by(berry, cata_variable, checked) %>%
-  summarize(penalty_lift = mean(rating),
-            count = n()) %>%
-  ungroup() 
-
 p1_berry_penalty <- 
   
-  # We start by widening our data just a bit, and use a function to give some
-  # better names to our mean values for when an attribute it checked (1) or not
-  # (0).
-  
   berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
-  
-  # Then we actually calculate the penalty/lift: what is the difference in the
-  # mean liking when an attribute is checked or not?
-  
-  group_by(berry, cata_variable) %>%
-  summarize(penalty_lift = checked_1 - checked_0) %>%
-  
-  # We have two kinds of CATA attibutes: visual assessment and by-mouth
-  # assessment.  It would be nice to keep track.
-  
-  separate(cata_variable, 
-           into = c("mode", "variable"), 
-           sep = "_") %>%
-  
-  # Fix a typo
-  
-  mutate(mode = str_replace(mode, "appearane", "appearance")) %>%
-  mutate(mode = case_when(mode == "taste" ~ "(T)",
-                          mode == "appearance" ~ "(A)")) %>%
-  unite(variable, mode, col = "cata_variable", sep = " ") %>%
   
   # We are using a function from tidytext that makes faceting the final figure
   # easier: reorder_within() makes a set of factors able to be ordered
   # differently within another variable.  In this case, we have different
   # attributes and different penalties within each berry by design
   
-  mutate(cata_variable = tidytext::reorder_within(x = cata_variable,
-                                                  by = penalty_lift,
-                                                  within = berry)) %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
   
   #And finally we plot!
   
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
   geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
   facet_wrap(~berry, scales = "free", nrow = 1) + 
   
@@ -464,17 +429,78 @@ p1_berry_penalty <-
   scale_fill_gradient(low = "tan", high = "darkgreen") + 
   labs(x = NULL, y = NULL,
        title = "Penalty / Lift Analysis",
-       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked\nor un-checked")
-
-# Let's save it so we can come back to it later:
-save(p1_berry_penalty, file = "data/goal-plot.RData")
+       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked")
 
 p1_berry_penalty
 ```
 
-<img src="02-ggplot2-basics_files/figure-html/berry-penalty-plots-1.png" width="672" style="display: block; margin: auto;" />
+<img src="02-ggplot2-basics_files/figure-html/berry-final-plot-1.png" width="672" style="display: block; margin: auto;" />
 
 We can see that the 2 most important attributes for driving liking are the same across all 4 berries, but that the highest penalty is different across them.
+
+
+``` r
+# First, we have some string-wrangling to do so that our various labels are
+# more descriptive and seem like a person wrote them, rather than a computer.
+
+nice_cider_labels <-
+  labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
+       y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
+       subtitle = "Correspondence Analysis biplot (symmetric)",
+       title = "Effect of cider serving temperature on consumer sensory perception")
+
+p2_ca_cider_cata <- 
+  ca_cider_coords %>%
+  
+  # A few specific aesthetics don't have scale_*() functions and require that
+  # you make a column with the exact names of the "value". Fontface is one of them.
+  
+  mutate(font = if_else(type == "row", "plain", "italic")) %>%
+  
+  # And now we plot!
+  
+  ggplot(aes(x = `Dim 1`, y = `Dim 2`)) +
+  
+  # We can use geoms to make darker lines at the origin of each axis.
+  # This goes first so that all of our data points are drawn on top.
+  
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgrey") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "darkgrey") +
+  
+  # We want to represent our samples with geom_point and our attributes
+  # with geom_text, so we need to do some creative filtering.
+  
+  geom_point(aes(color = type, shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row"),
+             size = 3) +
+  ggrepel::geom_text_repel(aes(label = name, color = type, fontface = font),
+                           show.legend = FALSE) +
+  
+  # and now we do our fine-tuning.
+  
+  coord_equal() + 
+  theme_linedraw() +
+  theme(legend.position = "bottom") +
+  nice_cider_labels + 
+  scale_color_manual(values = c("darkorange", "darkgreen")) +
+  scale_shape_manual(values = c(8, 16)) +
+  guides(shape = guide_legend(),
+         color = "none")
+
+p2_ca_cider_cata
+```
+
+<img src="02-ggplot2-basics_files/figure-html/cider-final-plot-1.png" width="672" style="display: block; margin: auto;" />
+
+
+
+
+``` r
+# Let's save them so we can come back to them later:
+save(p1_berry_penalty,
+     p2_ca_cider_cata,
+     file = "data/goal-plots.RData")
+```
 
 ## Some further reading
 

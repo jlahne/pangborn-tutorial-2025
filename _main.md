@@ -32,7 +32,7 @@ Jacob Lahne is an Associate Professor of Food Science & Technology at Virginia T
 
 ### Elizabeth Clark, PhD {-}
 
-Elizabeth Clark is a Senior Scientist in Sensory & Consumer Sciences at McCormick & Company Inc. — a global leader in flavor operating in two segments across 170 countries and territories. McCormick’s passion for Sensory & Consumer Science has led to published research on a replacement for the Scoville heat method for the sensory determination of pungency in capsicum products (Gillette, Appel, & Leggo, 1984); The Sensory Quality System (SQS): a global quality control solution (King et.al, 2022); the EsSense Profile®— a scientific measurement of the human emotional response to flavor (King & Meiselman, 2010), and The Wellsense Profile™ — a questionnaire to measure consumer wellness with foods (King et.al, 2015). Leveraging her interests in data analytics & coding, Elizabeth is helping McCormick usher in a new era of sensory research geared toward addressing rapidly evolving challenges faced by global food & beverage companies.
+Elizabeth Clark is a Senior Scientist in Sensory & Consumer Sciences at McCormick & Company Inc. — a global leader in flavor operating in two segments across 170 countries and territories. McCormick’s passion for Sensory & Consumer Science has led to published research on a replacement for the Scoville heat method for the sensory determination of pungency in capsicum products (Gillette, Appel, & Leggo, 1984), The Sensory Quality System (SQS): a global quality control solution (King et.al, 2022), the EsSense Profile®— a scientific measurement of the human emotional response to flavor (King & Meiselman, 2010), and The Wellsense Profile™ — a questionnaire to measure consumer wellness with foods (King et.al, 2015). Leveraging her interest in data analytics & coding, Elizabeth is helping McCormick usher in a new era of sensory research geared toward addressing rapidly evolving challenges faced by global food & beverage companies.
 
 ## Today's agenda {-}
 
@@ -43,14 +43,14 @@ Today's workshop is going to take ~3 hours, and we'll be covering the following 
     2. Basic data cleaning
     3. Saving/exporting data
 3.  Intro to `ggplot2`
-4.  Other Packages & Extras
+5.  Fine-Tuning Publication-Quality ggplots
     1. Adding layers and geoms (e.g., `ggrepel`)
     2. Plot-builders (e.g., `factoextra`)
     3. Combining plots
-5.  Fine-Tuning Publication-Quality ggplots
     1. Exporting plots
     2. Formatting text
     3. Ordering categorical variables
+
   
 ## How we're going to run {-}
 
@@ -196,13 +196,16 @@ cider_samples <-
   unite(Sample_Name, Temperature, col = "sample", sep = " ", remove = FALSE) %>%
   distinct()
 
-ca_cider <- 
+cider_contingency <- 
   raw_cider_data %>%
   select(Sample_Name, Temperature, Fresh_Apples:Synthetic) %>%
   unite(Sample_Name, Temperature, col = "sample", sep = " ") %>%
   group_by(sample) %>%
   summarize(across(where(is.numeric), ~sum(.))) %>%
-  column_to_rownames("sample") %>%
+  column_to_rownames("sample")
+  
+ca_cider <- 
+  cider_contingency %>%
   FactoMineR::CA(graph = FALSE)
 
 ca_cider_coords <- 
@@ -217,7 +220,16 @@ ca_cider_coords <-
   left_join(cider_samples, join_by(name == sample)) %>%
   mutate(name = if_else(is.na(Sample_Name), name, Sample_Name),
          name = str_replace_all(name, "_", " "),
-         name = str_replace(name, "FullBodied", "Full Bodied"))
+         name = str_replace(name, "FullBodied", "Full Bodied"),
+         modality = if_else(type == "col",
+                            case_when(name == "Sweet" ~ "Taste",
+                              name == "Bitter" ~ "Taste",
+                              name == "Sour" ~ "Taste",
+                              name == "Smooth" ~ "Mouthfeel",
+                              name == "Dry" ~ "Mouthfeel",
+                              name == "FullBodied" ~ "Mouthfeel",
+                              .default = "Aroma"),
+                            NA))
 
 nice_cider_labels <-
   labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
@@ -288,35 +300,35 @@ cleaned_berry_data <-
 berry_penalty_analysis_data <- 
   cleaned_berry_data %>%
   group_by(berry, cata_variable, checked) %>%
-  summarize(penalty_lift = mean(rating),
+  summarize(rating = mean(rating),
             count = n()) %>%
-  ungroup() 
-
-# Make a plot of the overall penalty/lift for checked attributes
-p1_berry_penalty <- 
-  berry_penalty_analysis_data %>%
-  select(-count) %>%
   pivot_wider(names_from = checked,
-              values_from = penalty_lift,
+              values_from = c(rating, count),
               names_prefix = "checked_") %>%
-  group_by(berry, cata_variable) %>%
-  summarize(penalty_lift = checked_1 - checked_0) %>%
+  mutate(penalty_lift = rating_checked_1 - rating_checked_0,
+         count = count_checked_1, .keep = "none") %>%
+  ungroup() %>%
   # We can tidy up our CATA labels
   separate(cata_variable, 
            into = c("mode", "variable"), 
-           sep = "_") %>%
+           sep = "_",
+           remove = FALSE) %>%
   # Fix a typo
   mutate(mode = str_replace(mode, "appearane", "appearance")) %>%
   mutate(mode = case_when(mode == "taste" ~ "(T)",
                           mode == "appearance" ~ "(A)")) %>%
-  unite(variable, mode, col = "cata_variable", sep = " ") %>%
+  unite(variable, mode, col = "cata_variable_clean", sep = " ")
+
+p1_berry_penalty <- 
+  
+  berry_penalty_analysis_data %>%
   # We are using a function from tidytext that makes faceting the final figure
   # easier
-  mutate(cata_variable = tidytext::reorder_within(x = cata_variable,
-                                                  by = penalty_lift,
-                                                  within = berry)) %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
   #And finally we plot!
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
   geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
   facet_wrap(~berry, scales = "free", nrow = 1) + 
   tidytext::scale_x_reordered() + 
@@ -333,7 +345,7 @@ p1_berry_penalty
 <img src="01-import-motivation-export_files/figure-html/berry-full-penalty-1.png" width="672" style="display: block; margin: auto;" />
 
 
-### "Publication quality"
+### "Publication quality" {#pubquality}
 
 What do we mean by "publication quality" visualizations?  Neither of us are theorists of visualization--for that, we would recommend that you look at the excellent work from [Claus Wilke](https://clauswilke.com/dataviz/) and [Kieran Healey](https://socviz.co/index.html#preface).  We will not be discussing (in any detail) ideas about which color palettes best communicate different types of data, what kinds of displays are most effective (box plots vs violin plots vs ...), or whether pie charts are really so bad (mostly yes).  
 
@@ -411,11 +423,13 @@ Often, though, it can be helpful to save multiple `R` objects so that a workplac
 save(berry_penalty_analysis_data,
      ca_cider_coords,
      ca_cider,
+     cider_contingency,
      file = "data/workshop-data.RData")
 
 rm(berry_penalty_analysis_data,
      ca_cider_coords,
-     ca_cider)
+     ca_cider,
+     cider_contingency)
 
 load(file = "data/workshop-data.RData")
 ```
@@ -665,6 +679,8 @@ ca_cider_coords %>%
 
 <img src="02-ggplot2-basics_files/figure-html/using theme-1.png" width="672" style="display: block; margin: auto;" />
 
+You can see a nearly-full list of the arguments to `ggplot2::theme()` in the theme help files (`?theme`), unlike with `ggplot2` aesthetics and the `geom_*()` help files.
+
 Many calls to `theme()` involve `element_*()` functions.  When we remove elements, for example, we use `element_blank()` (not, for example, `NA` or `NULL` as we typically would in other parts of `R`).
 
 When we want to change how our text is formatted (not the values, but the formatting), we use `element_text()` calls.
@@ -835,59 +851,22 @@ Now we are prepared to walk through the entire workflow:
 
 
 ``` r
-# First we wrangle our data using the tools we've learned to get penalties/lifts
-# for each attributes
-berry_penalty_analysis_data <- 
-  berry_long_cata %>%
-  group_by(berry, cata_variable, checked) %>%
-  summarize(penalty_lift = mean(rating),
-            count = n()) %>%
-  ungroup() 
-
 p1_berry_penalty <- 
   
-  # We start by widening our data just a bit, and use a function to give some
-  # better names to our mean values for when an attribute it checked (1) or not
-  # (0).
-  
   berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
-  
-  # Then we actually calculate the penalty/lift: what is the difference in the
-  # mean liking when an attribute is checked or not?
-  
-  group_by(berry, cata_variable) %>%
-  summarize(penalty_lift = checked_1 - checked_0) %>%
-  
-  # We have two kinds of CATA attibutes: visual assessment and by-mouth
-  # assessment.  It would be nice to keep track.
-  
-  separate(cata_variable, 
-           into = c("mode", "variable"), 
-           sep = "_") %>%
-  
-  # Fix a typo
-  
-  mutate(mode = str_replace(mode, "appearane", "appearance")) %>%
-  mutate(mode = case_when(mode == "taste" ~ "(T)",
-                          mode == "appearance" ~ "(A)")) %>%
-  unite(variable, mode, col = "cata_variable", sep = " ") %>%
   
   # We are using a function from tidytext that makes faceting the final figure
   # easier: reorder_within() makes a set of factors able to be ordered
   # differently within another variable.  In this case, we have different
   # attributes and different penalties within each berry by design
   
-  mutate(cata_variable = tidytext::reorder_within(x = cata_variable,
-                                                  by = penalty_lift,
-                                                  within = berry)) %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
   
   #And finally we plot!
   
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
   geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
   facet_wrap(~berry, scales = "free", nrow = 1) + 
   
@@ -900,17 +879,78 @@ p1_berry_penalty <-
   scale_fill_gradient(low = "tan", high = "darkgreen") + 
   labs(x = NULL, y = NULL,
        title = "Penalty / Lift Analysis",
-       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked\nor un-checked")
-
-# Let's save it so we can come back to it later:
-save(p1_berry_penalty, file = "data/goal-plot.RData")
+       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked")
 
 p1_berry_penalty
 ```
 
-<img src="02-ggplot2-basics_files/figure-html/berry-penalty-plots-1.png" width="672" style="display: block; margin: auto;" />
+<img src="02-ggplot2-basics_files/figure-html/berry-final-plot-1.png" width="672" style="display: block; margin: auto;" />
 
 We can see that the 2 most important attributes for driving liking are the same across all 4 berries, but that the highest penalty is different across them.
+
+
+``` r
+# First, we have some string-wrangling to do so that our various labels are
+# more descriptive and seem like a person wrote them, rather than a computer.
+
+nice_cider_labels <-
+  labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
+       y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
+       subtitle = "Correspondence Analysis biplot (symmetric)",
+       title = "Effect of cider serving temperature on consumer sensory perception")
+
+p2_ca_cider_cata <- 
+  ca_cider_coords %>%
+  
+  # A few specific aesthetics don't have scale_*() functions and require that
+  # you make a column with the exact names of the "value". Fontface is one of them.
+  
+  mutate(font = if_else(type == "row", "plain", "italic")) %>%
+  
+  # And now we plot!
+  
+  ggplot(aes(x = `Dim 1`, y = `Dim 2`)) +
+  
+  # We can use geoms to make darker lines at the origin of each axis.
+  # This goes first so that all of our data points are drawn on top.
+  
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgrey") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "darkgrey") +
+  
+  # We want to represent our samples with geom_point and our attributes
+  # with geom_text, so we need to do some creative filtering.
+  
+  geom_point(aes(color = type, shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row"),
+             size = 3) +
+  ggrepel::geom_text_repel(aes(label = name, color = type, fontface = font),
+                           show.legend = FALSE) +
+  
+  # and now we do our fine-tuning.
+  
+  coord_equal() + 
+  theme_linedraw() +
+  theme(legend.position = "bottom") +
+  nice_cider_labels + 
+  scale_color_manual(values = c("darkorange", "darkgreen")) +
+  scale_shape_manual(values = c(8, 16)) +
+  guides(shape = guide_legend(),
+         color = "none")
+
+p2_ca_cider_cata
+```
+
+<img src="02-ggplot2-basics_files/figure-html/cider-final-plot-1.png" width="672" style="display: block; margin: auto;" />
+
+
+
+
+``` r
+# Let's save them so we can come back to them later:
+save(p1_berry_penalty,
+     p2_ca_cider_cata,
+     file = "data/goal-plots.RData")
+```
 
 ## Some further reading
 
@@ -931,146 +971,263 @@ output: html_document
 
 
 
-The plots we've been making so far are fairly straightforward demonstrations. At the very end of Chapter 3, we briefly showed you the code and results for this plot:
+The plots we've been making so far are fairly straightforward demonstrations. At the very end of Chapter 2, we briefly showed you the code and results for these two plots:
 
 
 ``` r
 p1_berry_penalty
 ```
 
-<img src="03-finetuning-ggplot_files/figure-html/penalty analysis example-1.png" width="672" style="display: block; margin: auto;" />
+<img src="03-finetuning-ggplot_files/figure-html/pretty plot examples-1.png" width="672" style="display: block; margin: auto;" />
 
-Which uses some tricks from the `stringr` and `tidytext` packages in order to give us easy-to-read labels. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+``` r
+p2_ca_cider_cata
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/pretty plot examples-2.png" width="672" style="display: block; margin: auto;" />
+
+We're going to spend the rest of the workshop running through the tips and tricks we used to make these look polished. It's not an exhaustive list of the things you can change or tweak, though, so more than anything, we hope you walk away with the ability to identify what parts of a plot you want to change and the skills to figure out how to change it.
+
+But first, something that everyone will need for almost every plot:
+
+## Exporting and Saving Plots
+
+It may seem like a weird time to be talking about saving plots, when we haven't gotten to the "fine-tuning" yet, but you've already seen a few examples of things that change when the aspect ratio of the plot or the monitor you're viewing it on changes slightly. It is basically impossible to export a `ggplot` at the resolution needed for publishing without changing the aspect ratio, relative sizes, or space between some elements from what you're looking at in the Plots pane or the `.Rmd` chunk output.
+
+It's good practice to export your plot as an image (or pdf or knit-together document or however else you plan to export it) and re-export it periodically as you go through fine-tuning.
+
+This is also, probably, the most important part of this chapter. You will have to get every plot that you publish out of `R` somehow, after all!
+
+### Exporting Images with `ggsave()` {- #ggsave}
+You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc. 
+
+The easiest way to reproducibly save plots, so that all of your export options are in your code and you might be able to recreate it on a different computer, is with the function `ggplot2::ggsave()`, which works *similarly* to the `write_*()` functions and `save()`. You give it a file name to save to, relative to the current working directory, and then the variable that has your ggplot.
+
+
+``` r
+ggsave("img/penalty-lift.jpeg", p1_berry_penalty)
+```
+
+We saved our image as a JPEG file, because JPEG is one of the formats preferred by [Food Quality and Preference](https://www.sciencedirect.com/journal/food-quality-and-preference/publish/guide-for-authors#toc-51). `ggsave()` supports a wide variety of image formats and will automatically use the file type corresponding to the file extension (the stuff after the `.`) in the `filename` argument.
+
+<img src="img/penalty-lift.jpeg" width="672px" style="display: block; margin: auto;" />
+
+Note that `ggsave()` is like making a `.pdf` version of your working documents: you will not be able to read the plot images into `R` for editing anymore, no matter which format you save in.
+
+We can also specify the `width` and `height` of our plot in inches, centimeters, or several other possible `units`. Aside from the **aspect ratio** of height to width, the size also affects how large various elements *look*, since `geom_*()` and text sizes are ultimately defined as fractions of inches.
+
+Start by exporting your file at different `width` and `height` combinations until it looks legible, with readable text and other elements.
+
+
+``` r
+ggsave("img/penalty-lift-10x6.jpeg", p1_berry_penalty,
+       width = 10,
+       height = 6,
+       units = "in") #inches
+```
+
+<img src="img/penalty-lift-10x6.jpeg" width="672px" style="display: block; margin: auto;" />
+
+And then figure out the `dpi`, or number of dots per inch, needed to have a file that will print well. *Do not* just use the DPI you want to print at, especially if you're planning to use an image for a poster.
+
+The FQAP Guide for Authors also tells us that it wants "combination figures", which will include most graphs, at or above 500 dpi. A double column figure is about 7.5 inches or 190mm wide, so we need the image to be $7.5 \times 500 = 3750$ pixels wide. Since our nice plot had `width = 10`, we'll set the `dpi` so that $height \times dpi \geq 3750$.
+
+
+``` r
+ggsave("img/penalty-lift-double-column-width.jpeg", p1_berry_penalty,
+       width = 10,
+       height = 6,
+       units = "in", #inches
+       dpi = 400) #slightly above 3750 / 10. Always err on the side of slightly too big!!
+```
+
+<img src="img/penalty-lift-double-column-width.jpeg" width="672px" style="display: block; margin: auto;" />
+
+We go into a lot more detail on common file types and image resolution math in the [Appendix](#ggformat).
+
+## Fine-tuning bar plots & facets with different categorical variables
+
+We'll start with the penalty analysis plot.
+
+`p1_berry_penalty` uses some tricks from the `stringr` and `tidytext` packages in order to give us easy-to-read labels. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
 
 ``` r
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
-  mutate(penalty_lift = checked_1 - checked_0) %>%
   ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
   geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, scales = "free", nrow = 2) +
+  facet_wrap(~berry) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/worse berry penalty analysis example-1.png" width="672" style="display: block; margin: auto;" />
+
+Which we're showing because we have seen similar plots published in journal articles, with the difficult-to-read axes, underscores, redundant axis labels, and all. We can make this more readable by reordering the CATA attributes, shortening and reformatting the labels, and possibly by removing some extraneous elements like the `cata_variable` label. These are common steps that make a huge difference.
+
+### Horizontal text with coord_flip()
+
+We've used `coord_flip()` a few times already, and it's pretty straightforward to use--you just have to add it to a `ggplot()` call and it'll make your `x` axis the vertical axis and your `y` axis the horizontal.
+
+
+``` r
+berry_penalty_analysis_data %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  theme_classic() +
+  coord_flip()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/coord_flip-1.png" width="672" style="display: block; margin: auto;" />
+
+Even though the CATA attributes are still cramped and this isn't the best use of space, they're much easier to read now. If you've only got one categorical axis, it's almost always going to be more readable to have it be the *vertical axis* so that the text is horizontal.
+
+### Ordered Categorical Variables
+
+Many of the figures we've made so far have had an axis with a categorical variable. Have you figured out how `ggplot2` orders the levels of categorical variables? If you have noticed, it's likely because it's in a different order than the one we'd like.
+
+
+``` r
+berry_penalty_analysis_data %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
   coord_flip() + 
-  theme_classic() + 
-  scale_fill_gradient(low = "tan", high = "darkgreen")
+  theme_classic()
 ```
 
-<img src="03-finetuning-ggplot_files/figure-html/worse penalty analysis example-1.png" width="672" style="display: block; margin: auto;" />
+<img src="03-finetuning-ggplot_files/figure-html/default categorical axis in ggplot2-1.png" width="672" style="display: block; margin: auto;" />
 
-Which we're showing because we have seen similar plots published in journal articles, with the overlapping text, redundant axis labels, and all. We can make this more readable by reordering the CATA attributes, shortening and reformatting the labels, and possibly by removing some extraneous elements like the `cata_variable` label on the Y axis. These are common steps that make a huge difference.
+The CATA attributes are in alphabetical order (with the start of the alphabet the closest to 0). This is how `ggplot2` treats all `character` variables, and you can exert some control over the ordering by turning the variable into an ordered `factor`.
 
-And we'll get there, but first...
+#### Specifying Ordinal Variables as Factors
 
-## Exporting and Saving Plots
-
-It may seem like a weird time to be talking about saving plots, when we haven't gotten to the "fine-tuning" yet, but you should already be familiar with a few examples of things that change when the aspect ratio of the plot or the monitor you're viewing it on changes slightly. It is basically impossible to export a `ggplot` at the resolution needed for publishing without changing the aspect ratio, relative sizes, or space between some elements from what you're looking at in the Plots pane or the `.Rmd` chunk output.
-
-It's good practice to export your plot as an image (or pdf or knit-together document or however else you plan to export it) and re-export it periodically as you go through fine-tuning.
-
-This is also, probably, the most important part of this chapter. You will have to get every plot that you publish out of `R` somehow, after all! After that, we'll cover some tricks that we draw upon frequently, but you may find that you have different problems or priorities, or that some of these needs are situational.
-
-But you will have to export plots for every project you want to share with the world.
-
-### What format?
-
-You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc.
-
-There are two major ways to save the kind of spatial color data that comprise images such as graphs. You can store them as **vector graphics**, which can be rescaled because they're made up of lines and shapes (most commonly, `.pdf` and `.svg`) or as **raster (bitmap) graphics**, which store images as a grid of **pixels** which each have a single uniform color (most commonly, `.png` and `.jpeg`).
-
--  `.pdf` vector images are best for **LaTeX** and professional publishing
--  `.svg` vector images are more widely supported in word processors and websites
--  `.png` raster images are the most predictable to print, the best for web publishing, and can be used in pretty much every software ever made, *if* you know exactly the size you want. 
--  `.jpeg` (along with `.tiff`) raster images are the raster format preferred by *Food Quality and Preference* editors. They are worse for web publishing than `.png` but share its other advantages.
-
-Note that `ggsave()` is like making a `.pdf` version of your working documents: you will not be able to read the plot images into `R` for editing anymore, no matter which format you save in.
-
-### Exporting Images with `ggsave()` {#ggsave}
-The easiest way to reproducibly save plots, so that all of your export options are in your code and you might be able to recreate it on a different computer, is with the function `ggplot2::ggsave()`, which works *similarly* to the `write_*()` functions and `save()`. You give it a file name to save to, relative to the current working directory, and then the variable where your plot is saved.
+You can order variables by hand, if there's a particular order you have in mind:
 
 
 ``` r
-ggsave("img/penalty-lift-png.png", p1_berry_penalty)
+berry_penalty_analysis_data %>%
+  filter(str_detect(cata_variable, "taste")) %>%
+  mutate(cata_variable = factor(cata_variable,
+                                levels = c("taste_fruity",
+                                           "taste_melon", "taste_peachy", "taste_grapey", "taste_grape",
+                                           "taste_berry", "taste_cherry",
+                                           "taste_citrus", "taste_lemon",
+                                           "taste_tropical",
+                                           "taste_candy", "taste_caramel",
+                                           "taste_green", "taste_grassy", "taste_piney", "taste_minty",
+                                           "taste_earthy", "taste_fermented",
+                                           "taste_cinnamon", "taste_clove",
+                                           "taste_floral",
+                                           "taste_none"))) -> berry_penalty_manual_factors
+
+berry_penalty_manual_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
 ```
 
-`ggsave()` supports all of the above-named image formats, as well as `.eps`, `.ps`, `.tex` (pictex), and `.bmp`. It will figure out from the file extension (the stuff after the `.` in the `filename` argument) what image type it's saving as, but you can also specify it explicitly with the `device` argument.
+<img src="03-finetuning-ggplot_files/figure-html/manually making ordered factors-1.png" width="672" style="display: block; margin: auto;" />
 
-If you're reading this right now, you're looking at a webpage created using `bookdown` and `knitr`. We can't actually directly embed `.pdf` images in this site, but let's look at a few other example formats using the same plots.
+Note that the attribute you list *first* when you're specifying the `levels` will become 1, then 2, then 3. With `coord_flip()`, that puts it at the bottom of the plot.
 
 
 ``` r
-ggsave("img/penalty-lift-svg.svg", p1_berry_penalty)
-ggsave("img/penalty-lift-jpeg.jpeg", p1_berry_penalty)
+berry_penalty_manual_factors %>%
+  distinct(cata_variable) %>%
+  mutate(variable_number = as.numeric(cata_variable))
 ```
 
-Now let's compare how each of these looks! First, inside R:
+```
+## # A tibble: 22 × 2
+##    cata_variable   variable_number
+##    <fct>                     <dbl>
+##  1 taste_berry                   6
+##  2 taste_cinnamon               19
+##  3 taste_clove                  20
+##  4 taste_earthy                 17
+##  5 taste_fermented              18
+##  6 taste_floral                 21
+##  7 taste_fruity                  1
+##  8 taste_grape                   5
+##  9 taste_grassy                 14
+## 10 taste_lemon                   9
+## # ℹ 12 more rows
+```
+
+This gives us control, but it's pretty annoying to write out for large lists of attributes, and you have to be sure the spelling and capitalization match exactly. Often, like with the penalty analysis plots, what we actually want to do is order the Attributes in terms of some other numerical variable, like frequency or size of penalty.
+
+One way is to `arrange()` the data the way you want it and then use that order to specify the levels.
 
 
 ``` r
-p1_berry_penalty # If you're following along, this will look different in your R session!
+berry_penalty_analysis_data %>%
+  # Counting the number of times each attribute is used across all products:
+  group_by(cata_variable) %>%
+  mutate(variable_count = sum(count)) %>%
+  ungroup() %>%
+  # Arranging from least-to-most used:
+  arrange(variable_count) %>%
+  # Converting to a factor, so the least-used will be 1st, then the next:
+  mutate(cata_variable = factor(cata_variable, levels = unique(cata_variable),
+                            ordered = TRUE),
+         variable_number = as.numeric(cata_variable)) -> berry_penalty_frequency_factors
+
+#Now the plot:
+berry_penalty_frequency_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
 ```
 
-<img src="03-finetuning-ggplot_files/figure-html/viewing the plot inside R-1.png" width="672" style="display: block; margin: auto;" />
+<img src="03-finetuning-ggplot_files/figure-html/using another variable to order a factor-1.png" width="672" style="display: block; margin: auto;" />
 
-The `.svg` image made by `ggsave()`:
+#### Facets with Different Category-Orders
 
-<img src="img/penalty-lift-svg.svg" width="672px" style="display: block; margin: auto;" />
+You'll notice that our reordered categorical axes still have the same order across all of the plots. This would be true even if we used the within-product sums already in the `count` column to calculate `level`s. The order is based on factor levels, which are fixed within each column: `Fresh_Apples` can't be "more than" `Dry` in one part of the `cata_variable` column and "less than" in another part.
 
-The `.png` image made by `ggsave()`:
-
-<img src="img/penalty-lift-png.png" width="672px" style="display: block; margin: auto;" />
-
-The `.jpeg` image made by `ggsave()`:
-
-<img src="img/penalty-lift-jpeg.jpeg" width="672px" style="display: block; margin: auto;" />
-
-The two raster formats look basically the same, and only slightly different from the `.svg` and the version in the `.html` version of this tutorial. If you're following along in your own `R` session, however, you'll notice that these saved plots all look more similar to each other than they do to the initial plot you're previewing inside `R`. *All* of the plots have a bit more space around the text using `ggsave()`, taller bars, and a different aspect ratio ($width/height$).
-
-We can adjust these using the rest of the arguments to `ggsave()`. The `width`, `height`, and `units` primarily control the image size (for raster images) and aspect ratio (for all images), but they also affect the relative size of plot elements. Larger plots will have axis labels, text, and `geom_*()`s that take up less of the overall plotting area, and vice-versa for smaller images.
-
-If you get to this stage with a **vector image** and realize that all of the fixed-size elements (e.g., text) are too big or too small, you can use `ggsave()`'s `scale` argument. `scale` < 1 makes all the fixed-size elements *smaller* relative to the plot size and `scale` > 1 makes all the elements *bigger* relative to the plot size. `scale` < 1 will generally also give you a *larger plot area* and *more space between your geoms*.
+On its own, `facet_wrap(..., scales = "free")` can drop unneeded attributes from plots, but it will still keep the same *order* of the attributes across all axes.
 
 
 ``` r
-ggsave("img/penalty-lift-svg-7x4.svg", p1_berry_penalty,
-       width = 7, height = 4, units = "in")
-
-ggsave("img/penalty-lift-svg-14x8.svg", p1_berry_penalty,
-       width = 14, height = 8, units = "in")
-
-ggsave("img/penalty-lift-svg-14x8-rescale.svg", p1_berry_penalty,
-       width = 14, height = 8, units = "in", scale = .5)
+berry_penalty_frequency_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
 ```
 
-The 7x4" vector plot:
+<img src="03-finetuning-ggplot_files/figure-html/free scales on ordered data-1.png" width="672" style="display: block; margin: auto;" />
 
-<img src="img/penalty-lift-svg-7x4.svg" width="672px" style="display: block; margin: auto;" />
+If you have a faceted plot and you want each facet to have a different ordering of the terms, like in our big penalty analysis example, you'll have to use `tidytext::reorder_within()`, `tidytext::scale_*_reordered()`, *and* `facet_wrap(..., scales = "free")`, all at once:
 
-The same plot saved at 14x8":
 
-<img src="img/penalty-lift-svg-14x8.svg" width="672px" style="display: block; margin: auto;" />
+``` r
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(cata_variable_clean,
+                                                  by = count,
+                                                  within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  tidytext::scale_x_reordered() +
+  facet_wrap(~berry, scales = "free", nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
 
-A 14.8" plot with `scale = 0.5`:
+<img src="03-finetuning-ggplot_files/figure-html/tidytext reordering within facets-1.png" width="672" style="display: block; margin: auto;" />
 
-<img src="img/penalty-lift-svg-14x8-rescale.svg" width="672px" style="display: block; margin: auto;" />
-
-All of these `.svg` images are *displayed* at 7x4" on your screen, but the plot we made with `width = 14, height = 8` has smaller text and larger plotting areas unless we correct this with `scale`. `penalty-lift-svg-7x4.svg` and `penalty-lift-svg-14x8-rescale.svg` are actually identical files.
-
-You should *avoid using `scale` for rasters*, as it will create plots that will not print at the size (`width` and `height`) and resolution (`dpi`) you specified. If you find yourself wanting to change the `scale` of a raster image, you should refer to the reference we've put together on `dpi` in the [Appendix](#ggresolution).
-
-### Other Image Export Options
-
-This is not a `knitr` or `bookdown` tutorial, because we had to choose our topics, but we used the `bookdown` package to make the [online webpage version of this tutorial](https://lhami.github.io/sensometrics-r-tutorial-2024/). It comes with its own advantages and challenges, but it does significantly streamline the image-generation process for any project where the only file you need is one LaTeX file, `.html` page, or `.pdf` output with all of the text and all of the figures. If that sounds appealing to you, turn your attention to ["bookdown: Authoring Books and Technical Documents with `R` Markdown" by Yihui Xie](https://bookdown.org/yihui/bookdown/).
-
-## Making Text Look Okay
+### Making labels look okay: Powerful text manipulation with `stringr`
 
 A good `R` variable or column name doesn't have any spaces or punctuation other than underscores (`_`) and dots (`.`), to avoid all those pesky backticks (`\``) in our code.
 
 This is very different from what a good label in a plot looks like. You'll often want to make some sort of mass changes to column names or text variables before plotting, in order to address this.
-
-### Powerful Text Manipulation with `stringr`
 
 The `stringr` package is a part of the `tidyverse`, so you have it already loaded whenever you run `library(tidyverse)`. It has a lot of useful functions for working with text (called "**str**ings" in many programming languages), mostly of the form `str_*()`. One thing you can do is change labels to uppercase, lowercase, "sentence case", or "title case" (first letter of each word capitalized), as appropriate:
 
@@ -1083,7 +1240,7 @@ berry_penalty_analysis_data %>%
 ```
 
 ```
-## # A tibble: 170 × 3
+## # A tibble: 85 × 3
 ##    berry      Upper      Title     
 ##    <chr>      <chr>      <chr>     
 ##  1 blackberry BLACKBERRY Blackberry
@@ -1096,35 +1253,33 @@ berry_penalty_analysis_data %>%
 ##  8 blackberry BLACKBERRY Blackberry
 ##  9 blackberry BLACKBERRY Blackberry
 ## 10 blackberry BLACKBERRY Blackberry
-## # ℹ 160 more rows
+## # ℹ 75 more rows
 ```
+
+#### Replacing text
 
 `str_replace()` and `str_replace_all()` are very useful for dealing with underscores or periods. You give it `string`, the text vector you want to modify (inside `mutate()`, a column name); then `pattern`, the character(s) you want to replace; then `replacement`, what you want to replace them with.
 
 
 ``` r
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
   mutate(cata_variable = str_replace_all(cata_variable, "_", ": "))
 ```
 
 ```
-## # A tibble: 85 × 4
-##    berry      cata_variable           checked_0 checked_1
-##    <chr>      <chr>                       <dbl>     <dbl>
-##  1 blackberry appearance: fresh            4.70      5.80
-##  2 blackberry appearance: goodcolor        4.63      5.77
-##  3 blackberry appearance: goodquality      4.69      5.96
-##  4 blackberry appearance: goodshapre       4.93      5.86
-##  5 blackberry appearance: misshapen        5.63      4.92
-##  6 blackberry appearance: none             5.42      4.78
-##  7 blackberry appearance: notfresh         5.57      3.76
-##  8 blackberry appearance: unevencolor      5.53      4.53
-##  9 blackberry appearane: bruised           5.53      4.67
-## 10 blackberry taste: berry                 4.21      6.49
+## # A tibble: 85 × 5
+##    berry      cata_variable           cata_variable_clean penalty_lift count
+##    <chr>      <chr>                   <chr>                      <dbl> <int>
+##  1 blackberry appearance: fresh       fresh (A)                  1.10    977
+##  2 blackberry appearance: goodcolor   goodcolor (A)              1.14   1037
+##  3 blackberry appearance: goodquality goodquality (A)            1.26    859
+##  4 blackberry appearance: goodshapre  goodshapre (A)             0.923   787
+##  5 blackberry appearance: misshapen   misshapen (A)             -0.708   447
+##  6 blackberry appearance: none        none (A)                  -0.641    13
+##  7 blackberry appearance: notfresh    notfresh (A)              -1.81    127
+##  8 blackberry appearance: unevencolor unevencolor (A)           -0.998   163
+##  9 blackberry appearane: bruised      bruised (A)               -0.861   190
+## 10 blackberry taste: berry            berry (T)                  2.27    793
 ## # ℹ 75 more rows
 ```
 
@@ -1152,10 +1307,6 @@ You can add multiple sets of `pattern`s and `replace`ments to `str_replace_all()
 
 ``` r
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
   mutate(cata_variable = str_replace_all(cata_variable,
                                          c("shapre" = "shape",
                                            "appearane" = "appearance",
@@ -1163,19 +1314,19 @@ berry_penalty_analysis_data %>%
 ```
 
 ```
-## # A tibble: 85 × 4
-##    berry      cata_variable          checked_0 checked_1
-##    <chr>      <chr>                      <dbl>     <dbl>
-##  1 blackberry appearance fresh            4.70      5.80
-##  2 blackberry appearance goodcolor        4.63      5.77
-##  3 blackberry appearance goodquality      4.69      5.96
-##  4 blackberry appearance goodshape        4.93      5.86
-##  5 blackberry appearance misshapen        5.63      4.92
-##  6 blackberry appearance none             5.42      4.78
-##  7 blackberry appearance notfresh         5.57      3.76
-##  8 blackberry appearance unevencolor      5.53      4.53
-##  9 blackberry appearance bruised          5.53      4.67
-## 10 blackberry taste berry                 4.21      6.49
+## # A tibble: 85 × 5
+##    berry      cata_variable          cata_variable_clean penalty_lift count
+##    <chr>      <chr>                  <chr>                      <dbl> <int>
+##  1 blackberry appearance fresh       fresh (A)                  1.10    977
+##  2 blackberry appearance goodcolor   goodcolor (A)              1.14   1037
+##  3 blackberry appearance goodquality goodquality (A)            1.26    859
+##  4 blackberry appearance goodshape   goodshapre (A)             0.923   787
+##  5 blackberry appearance misshapen   misshapen (A)             -0.708   447
+##  6 blackberry appearance none        none (A)                  -0.641    13
+##  7 blackberry appearance notfresh    notfresh (A)              -1.81    127
+##  8 blackberry appearance unevencolor unevencolor (A)           -0.998   163
+##  9 blackberry appearance bruised     bruised (A)               -0.861   190
+## 10 blackberry taste berry            berry (T)                  2.27    793
 ## # ℹ 75 more rows
 ```
 
@@ -1195,10 +1346,6 @@ c("nocolor", "none", "cornonthecob", "anode") %>%
 ``` r
 #Or it can be useful for fixing lots of similar problems all at once
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
   mutate(cata_variable = str_replace_all(cata_variable,
                                          c("not" = "not ",
                                            "good" = "good ",
@@ -1207,19 +1354,19 @@ berry_penalty_analysis_data %>%
 ```
 
 ```
-## # A tibble: 85 × 4
-##    berry      cata_variable           checked_0 checked_1
-##    <chr>      <chr>                       <dbl>     <dbl>
-##  1 blackberry appearance fresh             4.70      5.80
-##  2 blackberry appearance good color        4.63      5.77
-##  3 blackberry appearance good quality      4.69      5.96
-##  4 blackberry appearance good shapre       4.93      5.86
-##  5 blackberry appearance misshapen         5.63      4.92
-##  6 blackberry appearance none              5.42      4.78
-##  7 blackberry appearance not fresh         5.57      3.76
-##  8 blackberry appearance uneven color      5.53      4.53
-##  9 blackberry appearane bruised            5.53      4.67
-## 10 blackberry taste berry                  4.21      6.49
+## # A tibble: 85 × 5
+##    berry      cata_variable           cata_variable_clean penalty_lift count
+##    <chr>      <chr>                   <chr>                      <dbl> <int>
+##  1 blackberry appearance fresh        fresh (A)                  1.10    977
+##  2 blackberry appearance good color   goodcolor (A)              1.14   1037
+##  3 blackberry appearance good quality goodquality (A)            1.26    859
+##  4 blackberry appearance good shapre  goodshapre (A)             0.923   787
+##  5 blackberry appearance misshapen    misshapen (A)             -0.708   447
+##  6 blackberry appearance none         none (A)                  -0.641    13
+##  7 blackberry appearance not fresh    notfresh (A)              -1.81    127
+##  8 blackberry appearance uneven color unevencolor (A)           -0.998   163
+##  9 blackberry appearane bruised       bruised (A)               -0.861   190
+## 10 blackberry taste berry             berry (T)                  2.27    793
 ## # ℹ 75 more rows
 ```
 
@@ -1246,240 +1393,555 @@ We have to **escape** the period (with an escaped backslash, technically, but fo
 
 Regex are extremely powerful tools for finding patterns in text, similar to the intuitive ways a human might recognize something like an email address, a measurement, or a parenthetical. We will not be talking about regex today, but if you want to see some examples and resources for learning how to use them, we've provided a short overview and links to some resources in the [Appendix](#regex).
 
-## Removing Legends and Plot Elements
+#### Splitting and combining text
 
-You've already seen us use `+ theme(panel.grid = element_blank())` to get rid of the grid lines in a plot. You can use `element_blank()` to get rid of lots of plot elements you might not want for whatever reason, usually because it's redundant with information you have elsewhere and thus just making the plot look more complicated or harder to read at a glance. The most common things you might want to remove are:
+It's also very common that you may have variable names in one column which actually represent multiple variables, and may want to, say, color-code the modality of the cata variables so that appearance attributes are one color and taste attributes are another.
 
-- `plot.title`, if some function added a title to the top of your plot and you want to get rid of it.
-- `axis.title`, `axis.title.x`, or `axis.title.y` if you don't need the column name(s) labeling your axes
-- `axis.ticks`, `axis.ticks.x`, or `axis.ticks.y` if you want to remove the little tick marks along a given axis (useful for bar plots)
+There are a few versions of the `tidyr::separate_wider_*()` function that can, for example, split the `cata_variable` column into two columns, one with everything *before* the **delimiter** (here, an underscore) and one with everything *after* the delimiter. Be very careful using `separate_wider_delim()` like this if some rows may have more underscores (or whatever your delimiter is) than others.
 
 
 ``` r
-berry_long_liking %>%
-  ggplot(aes(x = Scale, y = Liking, color = Scale)) +
-  ggbeeswarm::geom_quasirandom() +
-  facet_wrap(~ Attribute) +
-  theme_bw() +
-  theme(panel.grid = element_blank(),
-        axis.ticks = element_blank(),
+berry_penalty_by_modality <- berry_penalty_analysis_data %>%
+  separate_wider_delim(cata_variable, "_",
+                       names = c("mode", "variable"),
+                       cols_remove = FALSE)
+
+berry_penalty_by_modality
+```
+
+```
+## # A tibble: 85 × 7
+##    berry     mode  variable cata_variable cata_variable_clean penalty_lift count
+##    <chr>     <chr> <chr>    <chr>         <chr>                      <dbl> <int>
+##  1 blackber… appe… fresh    appearance_f… fresh (A)                  1.10    977
+##  2 blackber… appe… goodcol… appearance_g… goodcolor (A)              1.14   1037
+##  3 blackber… appe… goodqua… appearance_g… goodquality (A)            1.26    859
+##  4 blackber… appe… goodsha… appearance_g… goodshapre (A)             0.923   787
+##  5 blackber… appe… misshap… appearance_m… misshapen (A)             -0.708   447
+##  6 blackber… appe… none     appearance_n… none (A)                  -0.641    13
+##  7 blackber… appe… notfresh appearance_n… notfresh (A)              -1.81    127
+##  8 blackber… appe… unevenc… appearance_u… unevencolor (A)           -0.998   163
+##  9 blackber… appe… bruised  appearane_br… bruised (A)               -0.861   190
+## 10 blackber… taste berry    taste_berry   berry (T)                  2.27    793
+## # ℹ 75 more rows
+```
+
+``` r
+# Which would let you easily color-code your ggplot based on the new mode column
+
+berry_penalty_by_modality %>%
+  ggplot(aes(x = cata_variable, y = count, fill = mode)) +
+  geom_col() +
+  coord_flip()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/using separate to split one text column into multiple-1.png" width="672" style="display: block; margin: auto;" />
+(We'll get to the typo in just a second--you already know how to fix it, though!)
+
+If you want to put multiple columns of text *together*, you can use either `tidyr::unite()` or `stringr::str_c()` (string combine).
+
+
+``` r
+berry_penalty_by_modality %>%
+  mutate(cata_variable_2 = str_c(variable, mode, sep = " ")) %>%
+  unite(variable, mode, col = "cata_variable_3", sep = " ")
+```
+
+```
+## # A tibble: 85 × 7
+##    berry    cata_variable_3 cata_variable cata_variable_clean penalty_lift count
+##    <chr>    <chr>           <chr>         <chr>                      <dbl> <int>
+##  1 blackbe… fresh appearan… appearance_f… fresh (A)                  1.10    977
+##  2 blackbe… goodcolor appe… appearance_g… goodcolor (A)              1.14   1037
+##  3 blackbe… goodquality ap… appearance_g… goodquality (A)            1.26    859
+##  4 blackbe… goodshapre app… appearance_g… goodshapre (A)             0.923   787
+##  5 blackbe… misshapen appe… appearance_m… misshapen (A)             -0.708   447
+##  6 blackbe… none appearance appearance_n… none (A)                  -0.641    13
+##  7 blackbe… notfresh appea… appearance_n… notfresh (A)              -1.81    127
+##  8 blackbe… unevencolor ap… appearance_u… unevencolor (A)           -0.998   163
+##  9 blackbe… bruised appear… appearane_br… bruised (A)               -0.861   190
+## 10 blackbe… berry taste     taste_berry   berry (T)                  2.27    793
+## # ℹ 75 more rows
+## # ℹ 1 more variable: cata_variable_2 <chr>
+```
+
+You may have noticed that `berry_penalty_analysis_data` has both `cata_variable` and `cata_variable_clean`, and that the latter is shorter, which fits better on the page. You now know all of the tricks that we used to get from one to the other:
+
+
+``` r
+berry_penalty_analysis_data %>%
+  # Fixing typos
+  mutate(cata_variable = str_replace_all(cata_variable, c("appearane" = "appearance",
+                                                      "shapre" = "shape"))) %>%
+  # Separating the modality from the attribute name
+  separate_wider_delim(cata_variable, "_",
+                       names = c("mode", "variable"),
+                       cols_remove = FALSE) %>%
+  # Shorthand for the taste and appearance variables
+  mutate(mode = case_when(mode == "taste" ~ "(T)",
+                          mode == "appearance" ~ "(A)")) %>%
+  # Putting them back together
+  unite(variable, mode, col = "cata_variable_clean", sep = " ")
+```
+
+```
+## # A tibble: 85 × 5
+##    berry      cata_variable_clean cata_variable          penalty_lift count
+##    <chr>      <chr>               <chr>                         <dbl> <int>
+##  1 blackberry fresh (A)           appearance_fresh              1.10    977
+##  2 blackberry goodcolor (A)       appearance_goodcolor          1.14   1037
+##  3 blackberry goodquality (A)     appearance_goodquality        1.26    859
+##  4 blackberry goodshape (A)       appearance_goodshape          0.923   787
+##  5 blackberry misshapen (A)       appearance_misshapen         -0.708   447
+##  6 blackberry none (A)            appearance_none              -0.641    13
+##  7 blackberry notfresh (A)        appearance_notfresh          -1.81    127
+##  8 blackberry unevencolor (A)     appearance_unevencolor       -0.998   163
+##  9 blackberry bruised (A)         appearance_bruised           -0.861   190
+## 10 blackberry berry (T)           taste_berry                   2.27    793
+## # ℹ 75 more rows
+```
+
+### Removing Plot Elements
+
+Plots are easiest to read when they have only the information that's actually relevant, so some labels and other elements that `ggplot2` adds by default can end up being extraneous and distracting.
+
+We covered using `theme()` to remove elements with `element_blank()` (e.g., `+ theme(panel.grid = element_blank())` to get rid of the grid lines), but there are some exceptions to this rule.
+
+When we're using `tidytext::reorder_within()` to order each individual facet from highest penalty to highest lift, any color-coding for the lift is redundant info and we don't really need a legend to spell it out:
+
+
+``` r
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white") + 
+  facet_wrap(~berry, scales = "free", nrow = 1) + 
+  coord_flip() + 
+  tidytext::scale_x_reordered()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/redundant legend-1.png" width="672" style="display: block; margin: auto;" />
+
+We also don't really need the axis labels, since neither has units and anyone unfamiliar with a penalty-lift plot will need more explanation than an axis label can really provide, but `cata_variable_clean` is especially redundant.
+
+
+``` r
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white") + 
+  facet_wrap(~berry, scales = "free", nrow = 1) + 
+  coord_flip() + 
+  tidytext::scale_x_reordered() +
+  theme(axis.title.y = element_blank(),
         legend.position = "none")
 ```
 
-<img src="03-finetuning-ggplot_files/figure-html/removing the legend and the axis ticks-1.png" width="672" style="display: block; margin: auto;" />
+<img src="03-finetuning-ggplot_files/figure-html/removing the legend-1.png" width="672" style="display: block; margin: auto;" />
 
-You can see a nearly-full list of the arguments to `ggplot2::theme()` in the theme help files (`?theme`), unlike with `ggplot2` aesthetics and the `geom_*()` help files.
+We can remove these both with one call to `theme()`, but the axis title is removed with `axis.title.y = element_blank()` and the legend is removed with `legend.position = "none"`. And, yes, that *is* `axis.title.y`, referring to the same `cata_variable_clean` axis that `scale_x_reordered()` is calling the x-axis.
 
-If you want to remove the legend, you use `+ theme(legend.position = "none")`, but if you want to remove *specific geoms* from the legend, then you have to adjust your `geom_*()` calls.
+Some `ggplot2` functions will always refer to whatever you specified in `aes(x = ...)` as the x-axis, while some will refer to the *horizontal* axis as the x-axis, meaning that `coord_flip()` can make things confusing. It's not worth trying to memorize or find patterns--this is something you'll have to tweak by trial and error.
 
-
-``` r
-ca_cider$col$coord %>%
-  as_tibble(rownames = "Attribute") %>%
-  mutate(Modality = case_when(Attribute == "Sweet" ~ "Taste",
-                              Attribute == "Bitter" ~ "Taste",
-                              Attribute == "Sour" ~ "Taste",
-                              Attribute == "Smooth" ~ "Mouthfeel",
-                              Attribute == "Dry" ~ "Mouthfeel",
-                              Attribute == "FullBodied" ~ "Mouthfeel",
-                              .default = "Aroma")) %>%
-  ggplot(aes(x = `Dim 1`, y = `Dim 2`,
-             label = Attribute, color = Modality)) -> ca_cider_colored
-
-ca_cider_colored +
-  geom_point() +
-  ggrepel::geom_text_repel()
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/excluding geoms from the legend-1.png" width="672" style="display: block; margin: auto;" />
-
-``` r
-ca_cider_colored +
-  geom_point() +
-  ggrepel::geom_text_repel(show.legend = FALSE)
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/excluding geoms from the legend-2.png" width="672" style="display: block; margin: auto;" />
-
-## Ordered Categorical Variables
-
-Many of the figures we've made so far have had one axis with a categorical variable. Have you figured out how `ggplot2` orders the levels of categorical variables? If you have noticed, it's likely because it's in a different order than the one we'd like.
+Sometimes, there are multiple ways of removing a plot element, and whichever one you remember is fine to use. One notable example that may save you some typing is the `labs()` function, which lets you label the `x` and `y` axes, the whole plot `title`, and so on with a slightly easier-to-remember interface than `theme()`. Setting any of the `labs()` arguments `= NULL` will remove it from the plot.
 
 
 ``` r
-long_cider_data %>%
-  filter(checked == 1) %>%
-  ggplot(aes(x = cata_variable)) +
-  geom_bar() +
-  coord_flip() +
-  facet_grid(vars(Temperature), vars(Sample_Name))
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/default categorical axis in ggplot2-1.png" width="672" style="display: block; margin: auto;" />
-
-The CATA attributes are in alphabetical order. This is how `ggplot2` treats all `character` variables, and you can exert some control over the ordering by turning the variable into an ordered `factor`.
-
-### Specifying Ordinal Variables as Factors
-
-You can order variables by hand, if there's a particular order you have in mind:
-
-
-``` r
-long_cider_data %>%
-  mutate(cata_variable = factor(cata_variable,
-                                levels = c("Sweet", "Sour", "Bitter",
-                                           "Smooth", "Dry", "FullBodied",
-                                           "Light",
-                                           "Fruity", "Berries", "Fresh_Apples",
-                                           "Floral", "Spice",
-                                           "Herbal", "Woody", "Earthy",
-                                           "Funky", "Fermented", "Vomit",
-                                           "Synthetic", "Candy",
-                                           "Metallic", "Alcohol"))) -> long_cider_manual_factors
-
-long_cider_manual_factors %>%
-  filter(checked == 1) %>%
-  ggplot(aes(x = cata_variable)) +
-  geom_bar() +
-  coord_flip() +
-  facet_grid(vars(Temperature), vars(Sample_Name))
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/manually making ordered factors-1.png" width="672" style="display: block; margin: auto;" />
-
-Note that the attribute you list *first* when you're specifying the `levels` will become 1, then 2, then 3. With `coord_flip()`, that puts it at the bottom of the plot.
-
-
-``` r
-long_cider_manual_factors %>%
-  distinct(cata_variable) %>%
-  mutate(variable_number = as.numeric(cata_variable))
-```
-
-```
-## # A tibble: 22 × 2
-##    cata_variable variable_number
-##    <fct>                   <dbl>
-##  1 Fresh_Apples               10
-##  2 Fermented                  17
-##  3 Herbal                     13
-##  4 Dry                         5
-##  5 Spice                      12
-##  6 Fruity                      8
-##  7 Smooth                      4
-##  8 Alcohol                    22
-##  9 Light                       7
-## 10 Sweet                       1
-## # ℹ 12 more rows
-```
-
-This gives us control, but it's pretty annoying to write out for large lists of attributes, and you have to be sure the spelling and capitalization match exactly. Often, like with the penalty analysis plots, what we actually want to do is order the Attributes in terms of some other numerical variable, like frequency or size of penalty.
-
-One way is to `arrange()` the data the way you want it and then use that order to specify the levels.
-
-
-``` r
-long_cider_data %>%
-  # Counting the number of times each attribute is used across all products:
-  group_by(cata_variable) %>%
-  mutate(variable_count = sum(checked)) %>%
-  ungroup() %>%
-  # Arranging from least-to-most used:
-  arrange(variable_count) %>%
-  # Converting to a factor, so the least-used will be 1st, then the next:
-  mutate(cata_variable = factor(cata_variable, levels = unique(cata_variable),
-                            ordered = TRUE),
-         variable_number = as.numeric(cata_variable)) -> long_cider_frequency_factors
-
-#Now the plot:
-long_cider_frequency_factors %>%
-  filter(checked == 1) %>%
-  ggplot(aes(x = cata_variable)) +
-  geom_bar() +
-  coord_flip() +
-  facet_grid(vars(Temperature), vars(Sample_Name))
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/using another variable to order a factor-1.png" width="672" style="display: block; margin: auto;" />
-
-### Facets with Different Category-Orders
-
-You'll notice that our reordered categorical axes still have the same order across all of the plots. This would be true even if we changed our `group_by()` call and used within-product sums to calculate `level`s. The order is based on factor levels for a single column, and `Fresh_Apples` can't be "more than" `Dry` in one part of the column and "less than" in another part.
-
-On its own, `facet_wrap(..., scales = "free")` can drop unneeded attributes from plots, but it will still keep the same *order* of the attributes across all axes.
-
-If you have a faceted plot and you want each facet to have a different ordering of the terms, like in our big penalty analysis example, you'll have to use `tidytext::reorder_within()`, `tidytext::scale_*_reordered()`, *and* `facet_wrap(..., scales = "free")`, all at once:
-
-
-``` r
-long_cider_data %>%
-  # Counting the number of times each attribute is used across all products:
-  group_by(Sample_Name, Temperature, cata_variable) %>%
-  mutate(Product = str_c(Sample_Name, " (", Temperature, ")"),
-         variable_count = sum(checked),
-         cata_variable = tidytext::reorder_within(cata_variable,
-                                                  by = variable_count,
-                                                  within = list(Sample_Name, Temperature))) %>%
-  ungroup() %>%
-  filter(checked == 1) %>%
-  ggplot(aes(x = cata_variable)) +
-  geom_bar() +
+berry_penalty_analysis_data %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white") + 
+  facet_wrap(~berry, scales = "free", nrow = 1) + 
+  coord_flip() + 
   tidytext::scale_x_reordered() +
-  coord_flip() +
-  # This will not work with facet_grid, because it forces all plots in a row to
-  # share a vertical axis, even with scales = "free"
-  facet_wrap(~ Product,
-             scales = "free")
+  labs(x = NULL, y = "Penalty",
+       title = "Penalty / Lift Analysis",
+       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked")
 ```
 
-<img src="03-finetuning-ggplot_files/figure-html/tidytext reordering within facets-1.png" width="672" style="display: block; margin: auto;" />
+<img src="03-finetuning-ggplot_files/figure-html/removing axis labels-1.png" width="672" style="display: block; margin: auto;" />
 
-## Putting it all together
+Note that, unlike `theme()`, `labs(x = ...)` refers to the same `x` as `aes(x = ...)`.
+
+### Putting it all together
 
 Now, at long last, we're ready to walk line-by-line through the example penalty analysis figure that we've just been copy-pasting so far in the workshop.
 
 
 ``` r
 berry_penalty_analysis_data %>%
-  select(-count) %>%
-  pivot_wider(names_from = checked,
-              values_from = penalty_lift,
-              names_prefix = "checked_") %>%
-  separate(cata_variable, 
-           into = c("mode", "variable"), 
-           sep = "_") %>%
-  mutate(penalty_lift = checked_1 - checked_0,
-         mode = case_when(mode == "taste" ~ "(T)",
-                          mode == "appearance" ~ "(A)",
-                          mode == "appearane" ~ "(A)")) %>%
-  unite(variable, mode, col = "cata_variable", sep = " ") %>%
-  mutate(cata_variable = tidytext::reorder_within(x = cata_variable,
-                                                  by = penalty_lift,
-                                                  within = berry)) %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white") + 
   facet_wrap(~berry, scales = "free", nrow = 1) + 
   tidytext::scale_x_reordered() + 
   coord_flip() + 
   theme_classic() + 
   scale_fill_gradient(low = "tan", high = "darkgreen") + 
-  labs(x = NULL, y = NULL,
-       title = "Penalty / Lift Analysis",
-       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked\nor un-checked")
+  labs(title = "Penalty / Lift Analysis",
+       subtitle = "displays the mean difference (within berries) for when a CATA variable is checked") +
+  theme(axis.title = element_blank(),
+        legend.position = "none")
 ```
 
 <img src="03-finetuning-ggplot_files/figure-html/final walkthrough of penalty analysis-1.png" width="672" style="display: block; margin: auto;" />
 
+## Fine-tuning biplots with different types of variables
+
+`p2_ca_cider_cata` has a lot of different aesthetics, some of . Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+
+
+``` r
+draft_cider_plot <- ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw() + 
+  scale_color_manual(values = c("darkorange", "darkgreen"))
+
+draft_cider_plot
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/worse cider CA example-1.png" width="672" style="display: block; margin: auto;" />
+
+### Axis and plot labels based on variables
+
+The `FactoMineR` plot we briefly showed in [Chapter 1](#pubquality) included the percentage of inertia explained by each dimension *in the axis labels*, which is extremely nice, even though it's difficult to adjust the `FactoMineR` plot directly.
+
+The `FactoMineR::CA()` function gives us all of the information we need to add this to our ggplot, and in our data set it's saved in the `ca_cider$eig` matrix.
+
+
+``` r
+ca_cider$eig #the second column has the percentage of variance explained by each dimension
+```
+
+```
+##        eigenvalue percentage of variance cumulative percentage of variance
+## dim 1 0.055398432              60.446394                          60.44639
+## dim 2 0.017914259              19.546625                          79.99302
+## dim 3 0.009328142              10.178132                          90.17115
+## dim 4 0.005637110               6.150769                          96.32192
+## dim 5 0.003370919               3.678080                         100.00000
+```
+
+if you give `str_c()` multiple vectors with the same length, it'll combine the first element of the first vector with the first element of the second vector, and so on. So we could easily make a list of plot labels for each axis we have:
+
+
+``` r
+str_c(rownames(ca_cider$eig),
+      " (", # you'll need to add the symbols yourself, including spaces
+      round(ca_cider$eig[, 2], 1),
+      "%)")
+```
+
+```
+## [1] "dim 1 (60.4%)" "dim 2 (19.5%)" "dim 3 (10.2%)" "dim 4 (6.2%)" 
+## [5] "dim 5 (3.7%)"
+```
+
+``` r
+# Or you can do it one at a time:
+str_c("Dimension 1 (",
+      round(ca_cider$eig[1, 2], 1),
+      "% of intertia)")
+```
+
+```
+## [1] "Dimension 1 (60.4% of intertia)"
+```
+
+``` r
+str_c("Dimension 2 (",
+      round(ca_cider$eig[2, 2], 1),
+      "% of intertia)")
+```
+
+```
+## [1] "Dimension 2 (19.5% of intertia)"
+```
+
+To add it to the plot, we can use the `labs()` function, which lets you label the `x` and `y` axes, the whole plot `title`, and so on.
+
+
+``` r
+draft_cider_plot +
+  labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
+       y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
+       subtitle = "Correspondence Analysis biplot (symmetric)",
+       #if you want to insert a line break, you can use `\n`:
+       title = "Effect of cider serving temperature on consumer sensory perception\nbased on CATA data")
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/making wordy axis labels-1.png" width="672" style="display: block; margin: auto;" />
+
+### Setting up the Cartesian plane
+
+You may have noticed that `ggplot2` doesn't give any particular weight to the origin, or the gridlines that pass through it, even though (0,0) is often meaningful and we may want to see which points are positive or negative at a glance. Removing all gridlines or using `theme_void()` removes the x- and y-axes as well!
+
+The easiest way to address this is just to add two lines that are thicker/darker/different at $y = 0$ and $x = 0$, which we can do by adding more `geom_*()`s...
+
+
+``` r
+draft_cider_plot +
+  theme_void() +
+  geom_vline(xintercept = 0, color = "grey", linewidth = 1) +
+  geom_hline(yintercept = 0, color = "grey", linewidth = 1)
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/using geom_vline and geom_hline at the end-1.png" width="672" style="display: block; margin: auto;" />
+
+But if you aren't careful and add them *after* your other geoms, it will add them *on top* of the rest of the plot. In general, you should go ahead and add your axis lines right after calling `ggplot()`, before anything else, so that they're drawn on first and every other `geom_*()` goes on top of it.
+
+
+``` r
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_void()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/using geom_vline and geom_hline at the beginning-1.png" width="672" style="display: block; margin: auto;" />
+
+You can also make your plot more intuitive to read by ensuring that 1 unit of the x-axis is the same distance as one unit on the y-axis, using `coord_equal()`.
+
+
+``` r
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw() +
+  coord_equal()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/making axes equally scaled-1.png" width="672" style="display: block; margin: auto;" />
+
+This will often make plots resulting from SVD wider than they are tall, since the 1st dimension will definitionally explain more variation in the data.
+
+### Using only part of the dataset for each geom
+
+Many methods of SVD, including Correspondence Analysis, combine points from different datasets or yield coordinates for row and column variables that you may want to display significantly differently--maybe you want your PCA columns to be arrows instead of points, or (as you've seen above) having a point *and* a text label for every attribute is too busy. How do we plot only a subset of points for certain `geom_*()`s?
+
+You already know how to make certain subsets of points a different shape, color, size, opacity, and so on. But how do you avoid plotting certain subsets at all?
+
+You have to make a data frame with only the rows that you want e.g., `geom_point()`, to plot, and pass it into the `data` argument. We'll show how to do this using the `tidyverse` function `filter()`, but if there's another way you're more comfortable with then use that instead.
+
+
+``` r
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_point(data = ca_cider_coords %>% filter(type == "row")) +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/plotting different datasets with different geoms-1.png" width="672" style="display: block; margin: auto;" />
+
+If the columns happened to have different names, you'd have to specify the `aes()` mappings separately in each `geom_*()`, and it may make more sense to start with an empty `ggplot()` call and then add on `geom_*()`s each with their own `mapping` and `data` arguments if there's just one `geom_*()` per data frame.
+
+### Tweaking legends
+
+Legends can often get busy, or have information on them that's not actually clarifying anything in the plot, *especially* when you've got `geom_*()`s on the same plot using different datasets so that, for example, the color of the points isn't adding anything.
+
+
+``` r
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_point(aes(shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row")) +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/messy legend example-1.png" width="672" style="display: block; margin: auto;" />
+
+If you want to remove *specific geoms* from the legend, then you have to adjust your `geom_*()` calls.
+
+
+``` r
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_point(aes(shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row"),
+             show.legend = FALSE) +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/excluding geoms from the legend-1.png" width="672" style="display: block; margin: auto;" />
+If you want to move specific *aesthetics* (`linetype`, `linewidth`, `color`, `shape`, etc) from the legend, then you can add the `guides()` function to your plot and specify which ones should be in the legend and which shouldn't.
+
+
+``` r
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_point(aes(shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row")) +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw() +
+  guides(shape = guide_legend(),
+         color = "none")
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/excluding aesthetics from the legend-1.png" width="672" style="display: block; margin: auto;" />
+
+### Aesthetics that can't use scale_*() functions
+
+It's also common for row and column biplots to use different text styling for the row and column *variables*. Based on what you know so far, since we have the row/column designation in the `type` column, you might start out trying to set the `fontface` aesthetic like this:
+
+
+``` r
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name, fontface = type)) +
+  theme_bw() + 
+  scale_color_manual(values = c("darkorange", "darkgreen"))
+```
+
+```
+## Error in FUN(X[[i]], ...): invalid fontface row
+```
+You can map variable levels to colors, shapes, sizes, and so on using the `scale_*()` functions, but not all aesthetics can be controlled in this way. Most of the exceptions are related to text--font face, font family, and the justification of the text require that you have a variable that contains the name or value directly (`plain`, `bold`, `italic`, or `bold.italic` for `fontface`; `serif`, `sans`-serif, or `mono`space for `family`; and a number from 0-1 for `hjust` and `vjust`), if one `geom_text()` should have different values for different rows.
+
+Basically, if we want to accomplish this in `ggplot2`, we'll need to make a column with `plain` for our rows with samples and `italic` for our rows with CATA variables.
+
+
+``` r
+ca_cider_coords %>%
+  mutate(font = if_else(type == "row", "plain", "italic")) %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name, fontface = font)) +
+  theme_bw() + 
+  scale_color_manual(values = c("darkorange", "darkgreen"))
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/ggplot fontfaces the right way-1.png" width="672" style="display: block; margin: auto;" />
+
+### Putting it all together
+
+Finally, as our last act, we're ready to walk line-by-line through the last example figure, our fancier correspondence analysis plot.
+
+
+``` r
+nice_cider_labels <-
+  labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
+       y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
+       subtitle = "Correspondence Analysis biplot (symmetric)",
+       title = "Effect of cider serving temperature on consumer sensory perception")
+
+ca_cider_termplot <-
+  ca_cider_coords %>%
+  mutate(font = if_else(type == "row", "plain", "italic")) %>%
+  ggplot(aes(x = `Dim 1`, y = `Dim 2`)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgrey") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "darkgrey") +
+  geom_point(aes(color = type, shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row"),
+             size = 3) +
+  ggrepel::geom_text_repel(aes(label = name, color = type, fontface = font),
+                           show.legend = FALSE) +
+  coord_equal() + 
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  nice_cider_labels + 
+  scale_color_manual(values = c("darkorange", "darkgreen")) +
+  scale_shape_manual(values = c(8, 16)) +
+  guides(shape = guide_legend(),
+         color = "none")
+
+ca_cider_termplot
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/final walkthrough of correspondence analysis-1.png" width="672" style="display: block; margin: auto;" />
+
+``` r
+save(ca_cider_termplot, file = "data/ca_cider_termplot.RData")
+```
+
 <!--chapter:end:03-finetuning-ggplot.Rmd-->
+
+# Wrap-up and further resources
+
+
+
+Let's look back at what we were aiming to do today:
+
+> In this tutorial, we will introduce the audience to ggplot2 and the rest of the tidyverse R packages with the aim of developing sufficient basic skills to visualize multivariate sensory and consumer data. We will provide a learning dataset for the analysis—a set of free response comments and overall liking scores from a central location test on berries. We will teach participants how to import, manipulate, and plot data using user-friendly, “tidy” R programming. All resources used in the tutorial are open-source and will remain available to attendees, including an R script covering the full workflow.
+> 
+> At the end of the tutorial, attendees will be able to prepare raw sensory data for common multivariate visual representations in R.
+
+We have managed to touch on all of these topics, but of course we have taken the most cursory look at each.  I hope what we've gone over today has inspired you, sure, but I mostly hope it has shown you **how much you can do with just a little knowledge**.  My journey in terms of learning data science with `R` has been all about building my coding ability incrementally.  My code looks more like this than anything else, but I am able to get so much done:
+
+<center>
+
+![What does good code even look like? (via [XKCD](https://xkcd.com/844/))](img/xkcd_844_good_code.png)
+
+</center>
+
+By developing your ability to code (in `R` or Python, or whatever works for you--Julia?) you will open up a whole set of analyses that you would otherwise be unable to access.
+
+## Getting help
+
+1.  Look up the help file for whatever you're doing. Do this by using the syntax `?<search item>` (for example `?c` gets help on the vector command) as a shortcut on the console.
+2.  Search the help files for a term you think is related. Can't remember the command for making a sequence of integers? Go to the "Help" pane in RStudio and search in the search box for "sequence". See if some of the top results get you what you need.
+3.  The internet. Seriously. I am not kidding even a little bit. R has one of the most active and (surprisingly) helpful user communities I've ever encountered. Try going to google and searching for "How do I make a sequence of numbers in R?" You will find quite a bit of useful help. I find the following sites particularly helpful
+    1.  [Stack Overflow](https://stackoverflow.com/questions/tagged/r)
+    2.  [Cross Validated/Stack Exchange](https://stats.stackexchange.com/questions/tagged/r)
+    3.  Seriously, [Google will get you most of the way to helpful answers](https://is.gd/80V5zF) for many basic R questions.
+
+I want to emphasize that **looking up help is normal**. I do it all the time. Learning to ask questions in helpful ways, how to quickly parse the information you find, and how to slightly alter the answers to suit your particular situation are key skills.
+
+## Further reading/resources
+
+1.  General `R` programming
+    1.  [Data Carpentry's *R for Social Scientists*](https://datacarpentry.org/r-socialsci/) (and, really the courses from [The Carpentries](https://carpentries.org/) in general)
+    2.  [Wickham & Grolemund's *R for Data Science*](https://r4ds.had.co.nz/)
+    3.  [The stat545 course website](https://stat545.com/)
+    4.  My own (somewhat opinionated and eccentric) course from VT: [FST 5984](https://jlahne.github.io/food-data-science-2022/)
+2.  Data Visualization Best Practices
+    1.  [Healy's *Data Visualization*](https://socviz.co/)
+    2.  ["Caveats" from the website Data to Viz](https://www.data-to-viz.com/caveats.html), including topics such as why radar plots & pie charts are controversial and what to use instead.
+3. `ggplot2`-specific
+    1.  [Winston Chang's *R Graphics Cookbook*](https://r-graphics.org/), basically a collection of short tips and sample plots
+    2.  [R Graph Gallery's posts](https://r-graph-gallery.com/index.html) breaking down the code to make real, complex, polished ggplots
+    3.  [ggplot2's registered extension gallery](https://exts.ggplot2.tidyverse.org/)
+
+We will also be presenting...
+  
+## Questions/Comments
+
+If you get stuck, feel free to find us during the conference, or email us at **jlahne at vt dot edu** and **lhamilton at vsu dot edu**.  I'd love to learn about what you're working on! 
+
+## References
+
+<div id="refs"></div>
+
+<!--chapter:end:04-conclusions.Rmd-->
 
 ---
 output: html_document
 ---
 
-# Using ggplot with Other Packages
+# Appendix {-}
 
 
 
+## Using ggplot2 with other packages {-}
 As you might have noticed, we had you download more packages than just `ggplot2` for this tutorial. `ggplot2` is a framework and will help you make many standard plots, but it can't do everything. Or, sometimes, you may not want to use it to do everything yourself.
 
 Packages meant to work with `ggplot2` to more easily make specific kinds of visualizations are also called ggplot **extensions**. The four most common kinds of ggplot extensions are:
@@ -1491,157 +1953,7 @@ Packages meant to work with `ggplot2` to more easily make specific kinds of visu
 
 You can view many of these extensions [on the tidyverse website](https://exts.ggplot2.tidyverse.org/gallery/) (where you'll also see many examples that fall into multiple of these categories or don't fit into the categories here at all).
 
-## Data for the rest of the tutorial
-
-In order to dive into the actual visualization parts of a data analysis workflow, we're going to skip over most of the intensive data wrangling from here on out. In addition to the existing `raw_berry_data` and `raw_cider_data` we've read in previously with `read_csv()`, let's use `load("data/cleaned-data.RData")` to pull in 6 tibbles of data at various intermediate stages.
-
-If you're curious, we've included all of the code we used to wrangle these tibbles in the script `datawrangling.R`, but for now, let's just load them in and use the `FactoMineR` package to get some product coordinates.
-
-
-``` r
-load("data/cleaned-data.RData")
-
-cider_contingency %>%
-  FactoMineR::CA(graph = FALSE) -> ca_cider
-
-berry_mfa_summary %>%
-  FactoMineR::MFA(group = c(sum(str_detect(colnames(berry_mfa_summary), "^cata_")),
-                            sum(str_detect(colnames(berry_mfa_summary), "^liking_"))),
-                  type = c("f","s"), graph = FALSE,
-                  name.group = c("CATA","Liking")) -> berry_mfa_res
-
-save(ca_cider,
-     berry_mfa_res,
-     file = "data/svd-results.RData")
-```
-
-## New `geom_*()s` and `stat_*()`s
-If you want to label each individual point in the plotting area using text, rather than some symbol or color that indicates the legend off to the side, you can do this using the base `ggplot2` functions `geom_text()` and `geom_label()`:
-
-
-``` r
-#Let's use the cider CA example from before.
-#We can make our own plots from the coordinates.
-ca_cider$col$coord %>%
-  as_tibble(rownames = "Attribute") %>%
-  ggplot(aes(x = `Dim 1`, y = `Dim 2`, label = Attribute)) +
-  theme_bw() -> ca_cider_termplot
-
-ca_cider_termplot +
-  geom_text()
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/using geom_text with 22 sensory attributes-1.png" width="672" style="display: block; margin: auto;" />
-
-
-``` r
-ca_cider_termplot +
-  geom_label()
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/using geom_label with 22 sensory attributes-1.png" width="672" style="display: block; margin: auto;" />
-
-But, as you can see, the text starts to overlap itself quickly even with only a small handful of attributes. The extension I personally use most often, to make crowded plots like this more readable, is the package `ggrepel`, which adds new `geom_text_repel()` and `geom_label_repel()`.
-
-
-``` r
-ca_cider_termplot +
-  ggrepel::geom_label_repel()
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/using geom_label_repel with 22 sensory attributes-1.png" width="672" style="display: block; margin: auto;" />
-
-They're almost identical to the normal text and label `geom_*()`s, but they use an iterative algorithm to push each piece of text away from the other text and unrelated points or `geom_()`s, while being pulled towards the point being labeled. It is *not deterministic*, so it will be slightly different each time you run the code (try it now!) unless you use `set.seed()` first or set `seed = ***` when adding `geom_*_repel()`.
-
-Even with a set seed, changing the plot size or adding `geom_*()`s to the plot will also slightly change the locations of the labels, so if you're going to try and find a seed that works well for your data, you should be checking it on your final exported plot at the publication resolution (we'll talk about that next chapter).
-
-
-``` r
-ca_cider_termplot +
-  ggrepel::geom_label_repel(seed = 12345)
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/geom_text_repel with a set seed will look the same every time-1.png" width="672" style="display: block; margin: auto;" />
-
-There are many settings you can play with to adjust these forces, how far a label has to move for a line to show up, whether any labels are left off in dense areas, and how long it tries to find a solution. And, randomly, the ability to give each letter-shape a border in a different color, which seems to be totally undocumented in the help files. It can be useful if there are other, multi-colored `geom_*()`s in the background.
-
-
-``` r
-raw_cider_data %>%
-  mutate(Product = str_c(Sample_Name, Temperature, sep = " ")) %>%
-  group_by(Product) %>%
-  summarize(Liking = mean(Liking)) %>%
-  left_join(ca_cider$row$coord %>%
-              as_tibble(rownames = "Product")) %>%
-  rename_with(~ str_replace_all(.x, " ", ".")) -> ca_cider_productcoord
-
-#This is NOT a statistically sound preference model, this is just for demonstration
-ca_cider_prefmod <- lm(Liking ~ Dim.1 * Dim.2, data = ca_cider_productcoord)
-expand.grid(Dim.1 = seq(min(ca_cider$col$coord[, "Dim 1"]) - 0.1,
-                    max(ca_cider$col$coord[, "Dim 1"]) + 0.1,
-                    by = 0.01),
-            Dim.2 = seq(min(ca_cider$col$coord[, "Dim 2"]) - 0.1,
-                    max(ca_cider$col$coord[, "Dim 2"]) + 0.1,
-                    by = 0.01)) %>%
-  mutate(., Liking = predict(ca_cider_prefmod, newdata = .)) -> ca_cider_prefinterp
-
-ca_cider_termplot +
-  geom_contour_filled(aes(x = Dim.1, y = Dim.2, z = Liking, fill = after_stat(level)),
-                  inherit.aes = FALSE,
-                  data = ca_cider_prefinterp) + 
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  ggrepel::geom_text_repel(size = 6, color = "white", bg.color = "grey7")
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/geom_text_repel text borders-1.png" width="672" style="display: block; margin: auto;" />
-
-Another useful tool for visualizing any ordinal/binned data (e.g., the 9-point hedonic scale) at scale is the `geom_beeswarm()` and `geom_quasirandom()` from the `ggbeeswarm` package, which are similar to `geom_jitter()` but intended for looking at a single numeric variable at a time, possibly across multiple categories.
-
-They limit the jitter to a single direction and ensure that no points are overlapping (or, in the case of `geom_quasirandom()`, that there's a uniform amount of overlap) so you can get a more accurate picture of the density, but take up less space than many faceted `geom_histogram()`s (at least for the same amount of fine-tuning).
-
-
-``` r
-#The jitter plot is actually not very helpful with this many points
-berry_long_liking %>%
-  ggplot(aes(x = Scale, y = Liking, color = Scale)) +
-  geom_jitter() +
-  facet_wrap(~ Attribute) +
-  theme_bw()
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/using ggbeeswarm to compare ordinal distributions-1.png" width="672" style="display: block; margin: auto;" />
-
-``` r
-#geom_beeswarm() will also have the same problem, but geom_quasirandom()
-#visualizes the density at each "bin" without us having to specify bins.
-#So these are easy to compare
-berry_long_liking %>%
-  ggplot(aes(x = Scale, y = Liking, color = Scale)) +
-  ggbeeswarm::geom_quasirandom() +
-  facet_wrap(~ Attribute) +
-  theme_bw()
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/using ggbeeswarm to compare ordinal distributions-2.png" width="672" style="display: block; margin: auto;" />
-
-If you want to easily add circles and ellipses to a plot (say, the unit circle or a confidence ellipse), you'll probably want to install the `ggforce` package and use `geom_circle()` or `geom_ellipse()`, respectively.
-
-
-``` r
-berry_mfa_res$quanti.var$coord %>%
-  as_tibble(rownames = "Modality") %>%
-  ggplot() +
-  geom_segment(aes(x = 0, y = 0, xend = Dim.1, yend = Dim.2), arrow = arrow()) +
-  ggforce::geom_circle(aes(x0 = 0, y0 = 0, r = 1), color = "blue") +
-  ggrepel::geom_text_repel(aes(x = Dim.1, y = Dim.2, label = Modality)) +
-  theme_bw() +
-  theme(aspect.ratio = 1)
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/adding a unit circle with ggforce-1.png" width="672" style="display: block; margin: auto;" />
-
-## New `theme_*()`s and `scale_*()`s
+### New `theme_*()`s and `scale_*()`s {-}
 Most of the additional `geom_*()`s in `ggplot2` extensions involve some sort of calculation, so the confidence that you're using someone else's algorithm that's (hopefully!) been double-checked is a real benefit. You've already seen how to change the way your plots look with `theme()` one argument at a time, and how to set `scale_*_manual()` if you have the exact colors or color range that you want.
 
 So there's nothing these prettying-up packages will do that you can't do yourself, but there are a huge number of `ggplot2` extensions that include some version of a no-gridline minimal theme for convenience. Such as:
@@ -1655,16 +1967,29 @@ berry_long_liking %>%
   cowplot::theme_minimal_hgrid()
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/the minimal themes in cowplot-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/the minimal themes in cowplot-1.png" width="672" style="display: block; margin: auto;" />
 
 Packages that added `scale_*()`s used to be one of the most common kinds of ggplot extensions (because, as you'll notice, the above figure with the default color scale is not red-green colorblind friendly), but the most popular scales now come with `ggplot2` itself.
 
 `RColorBrewer`'s colorblind- and printer-friendly palettes for categorical data are now available in `ggplot2::scale_*_brewer_*()`, and you've already seen us use the `viridis` color palettes in `ggplot2::scale_*_viridis_*()`. The `viridis` color scales *can* be used for categorical data, if you use the `_d()` versions, but they were designed for ordinal and binned data, since some colors will seem more related than others. See [Chapter 4](https://clauswilke.com/dataviz/color-basics.html) and [Chapter 19](https://clauswilke.com/dataviz/color-pitfalls.html) of Claus O. Wilke's book *Fundamentals of Data Visualization*.
 
-## Modifying `ggplot()`s made by other packages
-So far in this chapter, we've been making all of the plots with a call to `ggplot()` and then adding on geoms, themes, labels, scales, and facets with `+`. But we've also been able to save our plots to variables partway through and then keep adding things to the saved plots. This is an incredibly useful difference from the way plots work in base R.
+### Finding New Packages {-}
 
-Some packages utilize `ggplot2` by making a whole plot for you with their own internal call to `ggplot()`, which means that you can treat it like any other ggplot for the sake of customizing. Most packages which can save a whole plot to a variable or output several plots in a list use `ggplot()` to do so.
+This isn't all the functionality of any of these packages, and these aren't the only packages that add new features to `ggplot2`.
+
+If you're trying to figure out how to create a type of plot you've never made before, we'd recommend:
+
+1. Ask yourself what variables are represented by the x and y axes, the shapes, the line types, or the colors. Think about whether you can build the plot from smaller components. Is it a grid of scatterplots with colored contour regions? How much of the plot is just points, lines, or rectangles with fancy formatting? You can do **a lot** with just `ggplot2`!
+2. See if any of the packages in [the list of registered ggplot extensions](https://exts.ggplot2.tidyverse.org/gallery/) have a plot similar to yours. These packages tend to have very thorough and visual documentation.
+3. If it's a sensory-specific plot, [check out the `R` Opus v2](https://jlahne.github.io/r-opus-v2/index.html). Almost all of the plots only use `ggplot2`, `patchwork`, and `ggrepel`.
+4. Use a web search with the kind of plot you want to make and the keyword "ggplot2" to find tutorials or discussions with example code. Results from [Stack Overflow](https://stackoverflow.com/questions/tagged/ggplot2), [Data to Viz](https://www.data-to-viz.com/), or [`R` Graph Gallery](https://r-graph-gallery.com/index.html) are all likely to have good explanations and useful examples, while anything with "(# examples)" in the article name is likely to be very basic material with good SEO.
+
+Keep in mind that keywords primarily used in sensory science, say "preference map" or "penalty analysis", are unlikely to yield examples in `ggplot2` with extensive results. In my own process of troubleshooting and double-checking for this workshop, I've found some helpful examples by searching "add density contours to 2d scatterplot ggplot" or "ordered bar plot positive and negative ggplot".
+
+Package documentation might come up while you're looking, but the examples are often very abstract and simple, and they're often structured around names of functions rather than concepts, so it's often faster to see some examples of real plots that other people (who aren't writing an entire `R` package) wanted to make and then looking up the functions they used to do so.
+
+### Modifying `ggplot()`s made by other packages {- #ggextend}
+In the workshop, we made almost all of our plots by calling `ggplot()` and then adding on geoms, themes, labels, scales, and facets with `+`, and we briefly alluded to why this is in [Chapter 1](#pubquality). But some packages *do* utilize `ggplot2` by making a whole plot for you with their own internal call to `ggplot()`, including `FactoMineR`, *and* you've seen us keep adding things to plots we've saved in variables. If you find yourself just slightly wanting to tweak the plot a package is saving to a variable (or a list, for several plots), it *may* be possible to do so with `+` semantics, instead of recreating the whole plot yourself. That's what this section of the appendix will walk through.
 
 
 ``` r
@@ -1683,7 +2008,7 @@ cider_contingency %>%
   ca::plot.ca() -> ca_cider_biplot_green
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/FactoMineR makes ggplots-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/FactoMineR makes ggplots-1.png" width="672" style="display: block; margin: auto;" />
 
 You can see that the last code chunk only output one plot right away, but we can confirm our suspicions with the base `R` `class()` function.
 
@@ -1759,7 +2084,7 @@ What this means is that we can look at the `FactoMineR`-made plot we've saved to
 ca_cider_biplot_facto
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/you can see saved ggplots by calling the variable-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/you can see saved ggplots by calling the variable-1.png" width="672" style="display: block; margin: auto;" />
 
 *And* we can still change up many of the elements by adding additional elements, although you're likely to get some weird warning messages *and* some silent errors. (The `ggrepel` error message is actually just because there are too many `geom_text_repel()` labels close-together in a small plots, because expanding `xlim()` crowds everything in the center of the plot.)
 
@@ -1772,12 +2097,7 @@ ca_cider_biplot_facto +
   scale_color_brewer(type = "qual", palette = "Dark2")
 ```
 
-```
-## Scale for x is already present.
-## Adding another scale for x, which will replace the existing scale.
-```
-
-<img src="04-ggplot2-extensions_files/figure-html/you can change many things about FactoMineR plots with ggplot semantics-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/you can change many things about FactoMineR plots with ggplot semantics-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
   # Silently fails to change the color scale
@@ -1802,15 +2122,17 @@ ca_cider_biplot_facto +
             data = liking_arrow)
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/you can easily add new geoms to FactoMineR plots-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/you can easily add new geoms to FactoMineR plots-1.png" width="672" style="display: block; margin: auto;" />
 
 If you desperately need to [change a scale or reorder `geom_*()`s from an existing `ggplot`](https://cran.r-project.org/web/packages/gginnards/vignettes/user-guide-2.html#replacing-scales-coordinates-whole-themes-and-data.) in a hurry, look into the `gginnards` package.
 
-## Combining Plots
-You've already seen how to `facet_*()` plots to view "small multiple" plots side-by side:
+## Combining Plots {-}
+During the workshop, we showed how to use `facet_*()` to view "small multiple" plots side-by side:
 
 
 ``` r
+raw_cider_data <- read_csv("data/CiderDryness_SensoryDATA.csv")
+
 raw_cider_data %>%
   pivot_longer(Fresh_Apples:Synthetic) %>%
   group_by(Sample_Name, Temperature, name) %>%
@@ -1828,7 +2150,7 @@ cider_count_plot +
   facet_wrap(~name, ncol = 6)
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/remember faceting-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/remember faceting-1.png" width="672" style="display: block; margin: auto;" />
 
 This works very well whenever you have multiple plots using the same `geom_*()`s that you want to show on the same axes, and you can even adjust the axis limits from facet to facet using `scales = "free*"`:
 
@@ -1839,7 +2161,7 @@ cider_count_plot +
              scales = "free_x") # Each plot now has a different x-axis
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/faceted plots with different x-axes-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/faceted plots with different x-axes-1.png" width="672" style="display: block; margin: auto;" />
 
 Not that we'd argue you *should* here. Also, take note that the `x` in `free_x` refers to the horizontal axis in the final plot, *after* the `coord_flip()`, and *not* the `x` aesthetic we set in the `ggplot()` call.
 
@@ -1850,10 +2172,17 @@ The easiest way to do this is using `patchwork`, which will work on ggplots you'
 
 ``` r
 library(patchwork)
+
+berry_mfa_summary %>%
+  FactoMineR::MFA(group = c(sum(str_detect(colnames(berry_mfa_summary), "^cata_")),
+                            sum(str_detect(colnames(berry_mfa_summary), "^liking_"))),
+                  type = c("f","s"), graph = FALSE,
+                  name.group = c("CATA","Liking")) -> berry_mfa_res
+
 plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all")
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/combining plots with patchwork-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/combining plots with patchwork-1.png" width="672" style="display: block; margin: auto;" />
 
 And the `/` operator will arrange two plots vertically:
 
@@ -1862,7 +2191,7 @@ And the `/` operator will arrange two plots vertically:
 plot(berry_mfa_res, choix = "var") / plot(berry_mfa_res, partial = "all")
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/arranging plots vertically with patchwork-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/arranging plots vertically with patchwork-1.png" width="672" style="display: block; margin: auto;" />
 
 The advantage of doing this with a package like `patchwork`, rather than saving separate images, is that it aligns all of the plot areas precisely and that they will more easily move or rearrange certain plot elements like legends and axis labels.
 
@@ -1874,7 +2203,7 @@ plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all") +
         legend.position = "bottom")
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/collecting legends at the bottom of a patchwork ensemble-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/collecting legends at the bottom of a patchwork ensemble-1.png" width="672" style="display: block; margin: auto;" />
 
 The `&` operator lets you add elements like themes or annotations to all of the plots you've combined together. `plot_layout()` is a `patchwork` function that lets you set relative plot sizes, decide how to arrange more than 2 plots, and move legends:
 
@@ -1889,7 +2218,7 @@ plot(berry_mfa_res, partial = "all") +
         legend.position = "bottom")
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/more complex patchwork layout-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/more complex patchwork layout-1.png" width="672" style="display: block; margin: auto;" />
 
 If you want to put images anywhere on a visualization, you're struggling to make a complex arrangement with `patchwork`, or you have an `R` `list` structure containing multiple plots (say, the result of a `for` loop, `*apply()`, or `nest()` call), then `cowplot` is another option:
 
@@ -1905,7 +2234,7 @@ berry_mfa_res$separate.analyses %>%
   cowplot::plot_grid(plotlist = ., labels = names(.))
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/plotting a list-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/plotting a list-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 #You can also pipe your list into patchwork::wrap_plots()
@@ -1924,7 +2253,7 @@ plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all") +
         legend.position = "bottom")
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/labeling plots-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/labeling plots-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
@@ -1932,7 +2261,7 @@ cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
                    labels = "AUTO")
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/labeling plots-2.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/labeling plots-2.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 #Cowplot doesn't have a way to combine or move legends.
@@ -1951,7 +2280,7 @@ plot(berry_mfa_res, choix = "var") + theme(plot.tag.position = c(0.2, 0.95)) +
         legend.position = "bottom")
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/moving plot labels-1.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/moving plot labels-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
@@ -1960,99 +2289,89 @@ cowplot::plot_grid(plot(berry_mfa_res, choix = "var"),
                    label_y = 0.8)
 ```
 
-<img src="04-ggplot2-extensions_files/figure-html/moving plot labels-2.png" width="672" style="display: block; margin: auto;" />
+<img src="appendix_files/figure-html/moving plot labels-2.png" width="672" style="display: block; margin: auto;" />
 
 You can also use any image editing, publishing, or graphics software to manually combine, arrange, and label plots, but if you need to make changes to a plot later then doing your layout *in `R`* will mean you just have to run the lightly-updated code again to re-export a fully formatted multi-part figure, even if the plot dimensions change.
 
-## Finding New Packages
+## Image File Types, Sizes, and Resolutions {- #ggformat}
 
-This isn't all the functionality of any of these packages, and these aren't the only packages that add new features to `ggplot2`.
+### What image format? {-}
 
-If you're trying to figure out how to create a type of plot you've never made before, we'd recommend:
+There are two major ways to save the kind of spatial color data that comprise images such as graphs. You can store them as **vector graphics**, which can be rescaled because they're made up of lines and shapes (most commonly, `.pdf` and `.svg`) or as **raster (bitmap) graphics**, which store images as a grid of **pixels** which each have a single uniform color (most commonly, `.png` and `.jpeg`).
 
-1. Ask yourself what variables are represented by the x and y axes, the shapes, the line types, or the colors. Think about whether you can build the plot from smaller components. Is it a grid of scatterplots with colored contour regions? How much of the plot is just points, lines, or rectangles with fancy formatting? You can do **a lot** with just `ggplot2`!
-2. See if any of the packages in [the list of registered ggplot extensions](https://exts.ggplot2.tidyverse.org/gallery/) have a plot similar to yours. These packages tend to have very thorough and visual documentation.
-3. If it's a sensory-specific plot, [check out the `R` Opus v2](https://jlahne.github.io/r-opus-v2/index.html). Almost all of the plots only use `ggplot2`, `patchwork`, and `ggrepel`.
-4. Use a web search with the kind of plot you want to make and the keyword "ggplot2" to find tutorials or discussions with example code. Results from [Stack Overflow](https://stackoverflow.com/questions/tagged/ggplot2), [Data to Viz](https://www.data-to-viz.com/), or [`R` Graph Gallery](https://r-graph-gallery.com/index.html) are all likely to have good explanations and useful examples, while anything with "(# examples)" in the article name is likely to be very basic material with good SEO.
+-  `.pdf` vector images are best for **LaTeX** and professional publishing
+-  `.svg` vector images are more widely supported in word processors and websites
+-  `.png` raster images are the most predictable to print, the best for web publishing, and can be used in pretty much every software ever made, *if* you know exactly the size you want. 
+-  `.jpeg` (along with `.tiff`) raster images are the raster format preferred by *Food Quality and Preference* editors. They are worse for web publishing than `.png` but share its other advantages and usually take up less storage space.
 
-Keep in mind that keywords primarily used in sensory science, say "preference map" or "penalty analysis", are unlikely to yield examples in `ggplot2` with extensive results. In my own process of troubleshooting and double-checking for this workshop, I've found some helpful examples by searching "add density contours to 2d scatterplot ggplot" or "ordered bar plot positive and negative ggplot".
+`ggsave()` supports all of the above-named image formats, as well as `.eps`, `.ps`, `.tex` (pictex), and `.bmp`. It will figure out from the file extension (the stuff after the `.` in the `filename` argument) what image type it's saving as, but you can also specify it explicitly with the `device` argument.
 
-Package documentation might come up while you're looking, but the examples are often very abstract and simple, and they're often structured around names of functions rather than concepts, so it's often faster to see some examples of real plots that other people (who aren't writing an entire `R` package) wanted to make and then looking up the functions they used to do so.
-
-Now, with the rest of the time we have left, I'm going to try and show off how I do some of the most common cleaning-up when it's time to actually present or publish.
-
-<!--chapter:end:04-ggplot2-extensions.Rmd-->
-
-# Wrap-up and further resources
+If you're reading this right now, you're looking at a webpage created using `bookdown` and `knitr`. We can't actually directly embed `.pdf` images in this site, but let's look at a few other example formats using the same plots.
 
 
+``` r
+ggsave("img/penalty-lift-svg.svg", p1_berry_penalty)
+ggsave("img/penalty-lift-jpeg.jpeg", p1_berry_penalty)
+ggsave('img/penalty-lift-png.png', p1_berry_penalty)
+```
 
-Let's look back at what we were aiming to do today:
-
-> In this tutorial, we will introduce the audience to ggplot2 and the rest of the tidyverse R packages with the aim of developing sufficient basic skills to visualize multivariate sensory and consumer data. We will provide a learning dataset for the analysis—a set of free response comments and overall liking scores from a central location test on berries. We will teach participants how to import, manipulate, and plot data using user-friendly, “tidy” R programming. All resources used in the tutorial are open-source and will remain available to attendees, including an R script covering the full workflow.
-> 
-> At the end of the tutorial, attendees will be able to prepare raw sensory data for common multivariate visual representations in R.
-
-We have managed to touch on all of these topics, but of course we have taken the most cursory look at each.  I hope what we've gone over today has inspired you, sure, but I mostly hope it has shown you **how much you can do with just a little knowledge**.  My journey in terms of learning data science with `R` has been all about building my coding ability incrementally.  My code looks more like this than anything else, but I am able to get so much done:
-
-<center>
-
-![What does good code even look like? (via [XKCD](https://xkcd.com/844/))](img/xkcd_844_good_code.png)
-
-</center>
-
-By developing your ability to code (in `R` or Python, or whatever works for you--Julia?) you will open up a whole set of analyses that you would otherwise be unable to access.
-
-## Getting help
-
-1.  Look up the help file for whatever you're doing. Do this by using the syntax `?<search item>` (for example `?c` gets help on the vector command) as a shortcut on the console.
-2.  Search the help files for a term you think is related. Can't remember the command for making a sequence of integers? Go to the "Help" pane in RStudio and search in the search box for "sequence". See if some of the top results get you what you need.
-3.  The internet. Seriously. I am not kidding even a little bit. R has one of the most active and (surprisingly) helpful user communities I've ever encountered. Try going to google and searching for "How do I make a sequence of numbers in R?" You will find quite a bit of useful help. I find the following sites particularly helpful
-    1.  [Stack Overflow](https://stackoverflow.com/questions/tagged/r)
-    2.  [Cross Validated/Stack Exchange](https://stats.stackexchange.com/questions/tagged/r)
-    3.  Seriously, [Google will get you most of the way to helpful answers](https://is.gd/80V5zF) for many basic R questions.
-
-I want to emphasize that **looking up help is normal**. I do it all the time. Learning to ask questions in helpful ways, how to quickly parse the information you find, and how to slightly alter the answers to suit your particular situation are key skills.
-
-## Further reading/resources
-
-1.  General `R` programming
-    1.  [Data Carpentry's *R for Social Scientists*](https://datacarpentry.org/r-socialsci/) (and, really the courses from [The Carpentries](https://carpentries.org/) in general)
-    2.  [Wickham & Grolemund's *R for Data Science*](https://r4ds.had.co.nz/)
-    3.  [The stat545 course website](https://stat545.com/)
-    4.  My own (somewhat opinionated and eccentric) course from VT: [FST 5984](https://jlahne.github.io/food-data-science-2022/)
-2.  Data Visualization Best Practices
-    1.  [Healy's *Data Visualization*](https://socviz.co/)
-    2.  ["Caveats" from the website Data to Viz](https://www.data-to-viz.com/caveats.html), including topics such as why radar plots & pie charts are controversial and what to use instead.
-3. `ggplot2`-specific
-    1.  [Winston Chang's *R Graphics Cookbook*](https://r-graphics.org/), basically a collection of short tips and sample plots
-    2.  [R Graph Gallery's posts](https://r-graph-gallery.com/index.html) breaking down the code to make real, complex, polished ggplots
-    3.  [ggplot2's registered extension gallery](https://exts.ggplot2.tidyverse.org/)
-
-We will also be presenting...
-  
-## Questions/Comments
-
-If you get stuck, feel free to find us during the conference, or email us at **jlahne at vt dot edu** and **lhamilton at vsu dot edu**.  I'd love to learn about what you're working on! 
-
-## References
-
-<div id="refs"></div>
-
-<!--chapter:end:05-conclusions.Rmd-->
-
----
-output: html_document
----
-
-# Appendix {-}
+Now let's compare how each of these looks! First, inside R:
 
 
+``` r
+p1_berry_penalty # If you're following along, this will look different in your R session!
+```
 
-## Image Sizes and Raster Resolutions {- #ggresolution}
+<img src="appendix_files/figure-html/viewing the plot inside R-1.png" width="672" style="display: block; margin: auto;" />
+
+The `.svg` image made by `ggsave()`:
+
+<img src="img/penalty-lift-svg.svg" width="672px" style="display: block; margin: auto;" />
+
+The `.png` image made by `ggsave()`:
+
+<img src="img/penalty-lift-png.png" width="672px" style="display: block; margin: auto;" />
+
+The `.jpeg` image made by `ggsave()`:
+
+<img src="img/penalty-lift-jpeg.jpeg" width="672px" style="display: block; margin: auto;" />
+
+The two raster formats look basically the same, and only slightly different from the `.svg` and the version in the `.html` version of this tutorial. If you're following along in your own `R` session, however, you'll notice that these saved plots all look more similar to each other than they do to the initial plot you're previewing inside `R`. *All* of the plots have a bit more space around the text using `ggsave()`, taller bars, and a different aspect ratio ($width/height$).
+
+We can adjust these using the rest of the arguments to `ggsave()`. The `width`, `height`, and `units` primarily control the image size (for raster images) and aspect ratio (for all images), but they also affect the relative size of plot elements. Larger plots will have axis labels, text, and `geom_*()`s that take up less of the overall plotting area, and vice-versa for smaller images.
+
+If you get to this stage with a **vector image** and realize that all of the fixed-size elements (e.g., text) are too big or too small, you can use `ggsave()`'s `scale` argument. `scale` < 1 makes all the fixed-size elements *smaller* relative to the plot size and `scale` > 1 makes all the elements *bigger* relative to the plot size. `scale` < 1 will generally also give you a *larger plot area* and *more space between your geoms*.
+
+
+``` r
+ggsave("img/penalty-lift-svg-7x4.svg", p1_berry_penalty,
+       width = 7, height = 4, units = "in")
+
+ggsave("img/penalty-lift-svg-14x8.svg", p1_berry_penalty,
+       width = 14, height = 8, units = "in")
+
+ggsave("img/penalty-lift-svg-14x8-rescale.svg", p1_berry_penalty,
+       width = 14, height = 8, units = "in", scale = .5)
+```
+
+The 7x4" vector plot:
+
+<img src="img/penalty-lift-svg-7x4.svg" width="672px" style="display: block; margin: auto;" />
+
+The same plot saved at 14x8":
+
+<img src="img/penalty-lift-svg-14x8.svg" width="672px" style="display: block; margin: auto;" />
+
+A 14.8" plot with `scale = 0.5`:
+
+<img src="img/penalty-lift-svg-14x8-rescale.svg" width="672px" style="display: block; margin: auto;" />
+
+All of these `.svg` images are *displayed* at 7x4" on your screen, but the plot we made with `width = 14, height = 8` has smaller text and larger plotting areas unless we correct this with `scale`. `penalty-lift-svg-7x4.svg` and `penalty-lift-svg-14x8-rescale.svg` are actually identical files.
+
+You should *avoid using `scale` for rasters*, as it will create plots that will not print at the size (`width` and `height`) and resolution (`dpi`) you specified. If you find yourself wanting to change the `scale` of a raster image, you should refer to the reference we've put together on `dpi` in the [Appendix](#ggresolution).
 
 ### Simpler Sizing: Vector Images {-}
-You might be surprised that vector images have height and width options, because we said they don't have a fixed display size, but as you saw in [Chapter 5](#ggsave), `ggsave()` picked a default image size of 7x7 inches when we didn't specify. The height and width are mostly important for determining the relative sizing of elements like text and whitespace.
+You might be surprised that vector images have height and width options, because we said they don't have a fixed display size, but as you saw in [Chapter 3](#ggsave), `ggsave()` picked a default image size of 7x7 inches when we didn't specify. The height and width are mostly important for determining the relative sizing of elements like text and whitespace.
 
 `ggplot2` actually saves the sizes of certain plot elements, namely *text* and most `geom_*()`s, in inches or millimeters. When it has to construct an actual version of the plot at a given size, it tries to keep all of the 12-pt text 1/6" tall (1 inch = 72 points). This 12-point font will take up a very small amount of a 4-foot-tall image, but a sixth of a 1" image.
 
@@ -2117,6 +2436,10 @@ Unlike `scale`, the `dpi` argument does not resize any of the text or geoms (it 
 
 In cases like these, it may be easier to output a size with the right *aspect ratio* that looks good and is legible, then figure out what `dpi` you'll need to print it. If we need a 14x8" plot at 300 dpi, that's $14 \times 300 = 4200$ pixels wide by $8 \times 300 = 2400$ tall. We can fake this with our 7x4" plot at 600 dpi, since $4200 / 7 = 600$ and $2400 / 4 = 600$.
 
+### Other Image Export Options
+
+This is not a `knitr` or `bookdown` tutorial, but we used the `bookdown` package to make the [online webpage version of this tutorial](https://jlahne.github.io/pangborn-tutorial-2025/). It comes with its own advantages and challenges, but it does significantly streamline the image-generation process for any project where the only file you need is one LaTeX file, `.html` page, or `.pdf` output with all of the text and all of the figures. If that sounds appealing to you, turn your attention to ["bookdown: Authoring Books and Technical Documents with `R` Markdown" by Yihui Xie](https://bookdown.org/yihui/bookdown/).
+
 ## Regular Expressions {- #regex}
 A regular expression, or regex, is a way of compactly writing a `pattern` that will let you match similarly-structured pieces of text. You may use regex because you want the list of matches itself, because you want to do something to pieces of text with a certain pattern somewhere in them, or because you want to replace all matches with something else. Regex were originally designed in the 1980s, and are also a central part of the design of the `stringr` package (although `stringr` still has a lot of useful tools without them).
 
@@ -2126,12 +2449,12 @@ Mostly, Regex are very powerful and very difficult to read. We'll provide a few 
 
 
 ``` r
-str_extract("If you want to get in touch with me you can do so at lhamilton@vsu.edu.",
+str_extract("If you want to get in touch with me you can do so at hamilton@flavorlinguist.com.",
             "\\w*@\\w+\\.(edu|gov|com|org|biz|net|fr|co\\.uk)\\b")
 ```
 
 ```
-## [1] "lhamilton@vsu.edu"
+## [1] "hamilton@flavorlinguist.com"
 ```
 
 ``` r

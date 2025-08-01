@@ -8,6 +8,7 @@ output: html_document
 library(tidyverse)
 load("data/cleaned-data.RData")
 load("data/goal-plot.RData")
+load("data/ca_cider_termplot.RData")
 knitr::opts_chunk$set(fig.align = "center", warning = FALSE, message = FALSE)
 ```
 
@@ -124,6 +125,8 @@ If you desperately need to [change a scale or reorder `geom_*()`s from an existi
 During the workshop, we showed how to use `facet_*()` to view "small multiple" plots side-by side:
 
 ```{r remember faceting, message = FALSE}
+raw_cider_data <- read_csv("data/CiderDryness_SensoryDATA.csv")
+
 raw_cider_data %>%
   pivot_longer(Fresh_Apples:Synthetic) %>%
   group_by(Sample_Name, Temperature, name) %>%
@@ -157,6 +160,13 @@ The easiest way to do this is using `patchwork`, which will work on ggplots you'
 
 ```{r combining plots with patchwork, fig.width=7, warning = FALSE}
 library(patchwork)
+
+berry_mfa_summary %>%
+  FactoMineR::MFA(group = c(sum(str_detect(colnames(berry_mfa_summary), "^cata_")),
+                            sum(str_detect(colnames(berry_mfa_summary), "^liking_"))),
+                  type = c("f","s"), graph = FALSE,
+                  name.group = c("CATA","Liking")) -> berry_mfa_res
+
 plot(berry_mfa_res, choix = "var") + plot(berry_mfa_res, partial = "all")
 ```
 
@@ -256,6 +266,7 @@ If you're reading this right now, you're looking at a webpage created using `boo
 ```{r exporting a plot in multiple formats}
 ggsave("img/penalty-lift-svg.svg", p1_berry_penalty)
 ggsave("img/penalty-lift-jpeg.jpeg", p1_berry_penalty)
+ggsave('img/penalty-lift-png.png', p1_berry_penalty)
 ```
 
 Now let's compare how each of these looks! First, inside R:
@@ -404,7 +415,7 @@ If you wanted to match all words ending in "ly", you could use `\\b\\w+ly\\b`, w
 Mostly, Regex are very powerful and very difficult to read. We'll provide a few semi-realistic examples in action to show off just how powerful they can be, and just how messy they look:
 
 ```{r some regex examples}
-str_extract("If you want to get in touch with me you can do so at lhamilton@vsu.edu.",
+str_extract("If you want to get in touch with me you can do so at hamilton@flavorlinguist.com.",
             "\\w*@\\w+\\.(edu|gov|com|org|biz|net|fr|co\\.uk)\\b")
 str_extract_all("Our 300th measurement was 10.31 cm, our 301st clocked in at 3.213in",
             "\\d+\\.\\d+ ?(cm|in|m)")

@@ -32,7 +32,7 @@ Jacob Lahne is an Associate Professor of Food Science & Technology at Virginia T
 
 ### Elizabeth Clark, PhD {-}
 
-Elizabeth Clark is a Senior Scientist in Sensory & Consumer Sciences at McCormick & Company Inc. — a global leader in flavor operating in two segments across 170 countries and territories. McCormick’s passion for Sensory & Consumer Science has led to published research on a replacement for the Scoville heat method for the sensory determination of pungency in capsicum products (Gillette, Appel, & Leggo, 1984); The Sensory Quality System (SQS): a global quality control solution (King et.al, 2022); the EsSense Profile®— a scientific measurement of the human emotional response to flavor (King & Meiselman, 2010), and The Wellsense Profile™ — a questionnaire to measure consumer wellness with foods (King et.al, 2015). Leveraging her interests in data analytics & coding, Elizabeth is helping McCormick usher in a new era of sensory research geared toward addressing rapidly evolving challenges faced by global food & beverage companies.
+Elizabeth Clark is a Senior Scientist in Sensory & Consumer Sciences at McCormick & Company Inc. — a global leader in flavor operating in two segments across 170 countries and territories. McCormick’s passion for Sensory & Consumer Science has led to published research on a replacement for the Scoville heat method for the sensory determination of pungency in capsicum products (Gillette, Appel, & Leggo, 1984), The Sensory Quality System (SQS): a global quality control solution (King et.al, 2022), the EsSense Profile®— a scientific measurement of the human emotional response to flavor (King & Meiselman, 2010), and The Wellsense Profile™ — a questionnaire to measure consumer wellness with foods (King et.al, 2015). Leveraging her interest in data analytics & coding, Elizabeth is helping McCormick usher in a new era of sensory research geared toward addressing rapidly evolving challenges faced by global food & beverage companies.
 
 ## Today's agenda {-}
 
@@ -43,14 +43,14 @@ Today's workshop is going to take ~3 hours, and we'll be covering the following 
     2. Basic data cleaning
     3. Saving/exporting data
 3.  Intro to `ggplot2`
-4.  Other Packages & Extras
+5.  Fine-Tuning Publication-Quality ggplots
     1. Adding layers and geoms (e.g., `ggrepel`)
     2. Plot-builders (e.g., `factoextra`)
     3. Combining plots
-5.  Fine-Tuning Publication-Quality ggplots
     1. Exporting plots
     2. Formatting text
     3. Ordering categorical variables
+
   
 ## How we're going to run {-}
 

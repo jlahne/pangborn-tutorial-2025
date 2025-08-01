@@ -67,13 +67,16 @@ cider_samples <-
   unite(Sample_Name, Temperature, col = "sample", sep = " ", remove = FALSE) %>%
   distinct()
 
-ca_cider <- 
+cider_contingency <- 
   raw_cider_data %>%
   select(Sample_Name, Temperature, Fresh_Apples:Synthetic) %>%
   unite(Sample_Name, Temperature, col = "sample", sep = " ") %>%
   group_by(sample) %>%
   summarize(across(where(is.numeric), ~sum(.))) %>%
-  column_to_rownames("sample") %>%
+  column_to_rownames("sample")
+  
+ca_cider <- 
+  cider_contingency %>%
   FactoMineR::CA(graph = FALSE)
 
 ca_cider_coords <- 
@@ -88,7 +91,16 @@ ca_cider_coords <-
   left_join(cider_samples, join_by(name == sample)) %>%
   mutate(name = if_else(is.na(Sample_Name), name, Sample_Name),
          name = str_replace_all(name, "_", " "),
-         name = str_replace(name, "FullBodied", "Full Bodied"))
+         name = str_replace(name, "FullBodied", "Full Bodied"),
+         modality = if_else(type == "col",
+                            case_when(name == "Sweet" ~ "Taste",
+                              name == "Bitter" ~ "Taste",
+                              name == "Sour" ~ "Taste",
+                              name == "Smooth" ~ "Mouthfeel",
+                              name == "Dry" ~ "Mouthfeel",
+                              name == "FullBodied" ~ "Mouthfeel",
+                              .default = "Aroma"),
+                            NA))
 
 nice_cider_labels <-
   labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
@@ -159,35 +171,35 @@ cleaned_berry_data <-
 berry_penalty_analysis_data <- 
   cleaned_berry_data %>%
   group_by(berry, cata_variable, checked) %>%
-  summarize(penalty_lift = mean(rating),
+  summarize(rating = mean(rating),
             count = n()) %>%
-  ungroup() 
-
-# Make a plot of the overall penalty/lift for checked attributes
-p1_berry_penalty <- 
-  berry_penalty_analysis_data %>%
-  select(-count) %>%
   pivot_wider(names_from = checked,
-              values_from = penalty_lift,
+              values_from = c(rating, count),
               names_prefix = "checked_") %>%
-  group_by(berry, cata_variable) %>%
-  summarize(penalty_lift = checked_1 - checked_0) %>%
+  mutate(penalty_lift = rating_checked_1 - rating_checked_0,
+         count = count_checked_1, .keep = "none") %>%
+  ungroup() %>%
   # We can tidy up our CATA labels
   separate(cata_variable, 
            into = c("mode", "variable"), 
-           sep = "_") %>%
+           sep = "_",
+           remove = FALSE) %>%
   # Fix a typo
   mutate(mode = str_replace(mode, "appearane", "appearance")) %>%
   mutate(mode = case_when(mode == "taste" ~ "(T)",
                           mode == "appearance" ~ "(A)")) %>%
-  unite(variable, mode, col = "cata_variable", sep = " ") %>%
+  unite(variable, mode, col = "cata_variable_clean", sep = " ")
+
+p1_berry_penalty <- 
+  
+  berry_penalty_analysis_data %>%
   # We are using a function from tidytext that makes faceting the final figure
   # easier
-  mutate(cata_variable = tidytext::reorder_within(x = cata_variable,
-                                                  by = penalty_lift,
-                                                  within = berry)) %>%
+  mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
+                                                        by = penalty_lift,
+                                                        within = berry)) %>%
   #And finally we plot!
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
   geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
   facet_wrap(~berry, scales = "free", nrow = 1) + 
   tidytext::scale_x_reordered() + 
@@ -204,7 +216,7 @@ p1_berry_penalty
 <img src="01-import-motivation-export_files/figure-html/berry-full-penalty-1.png" width="672" style="display: block; margin: auto;" />
 
 
-### "Publication quality"
+### "Publication quality" {#pubquality}
 
 What do we mean by "publication quality" visualizations?  Neither of us are theorists of visualization--for that, we would recommend that you look at the excellent work from [Claus Wilke](https://clauswilke.com/dataviz/) and [Kieran Healey](https://socviz.co/index.html#preface).  We will not be discussing (in any detail) ideas about which color palettes best communicate different types of data, what kinds of displays are most effective (box plots vs violin plots vs ...), or whether pie charts are really so bad (mostly yes).  
 
@@ -282,11 +294,13 @@ Often, though, it can be helpful to save multiple `R` objects so that a workplac
 save(berry_penalty_analysis_data,
      ca_cider_coords,
      ca_cider,
+     cider_contingency,
      file = "data/workshop-data.RData")
 
 rm(berry_penalty_analysis_data,
      ca_cider_coords,
-     ca_cider)
+     ca_cider,
+     cider_contingency)
 
 load(file = "data/workshop-data.RData")
 ```

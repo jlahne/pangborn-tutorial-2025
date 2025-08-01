@@ -56,14 +56,14 @@ Today's workshop is going to take ~3 hours, and we'll be covering the following 
     2. Basic data cleaning
     3. Saving/exporting data
 3.  Intro to `ggplot2`
-4.  Other Packages & Extras
+5.  Fine-Tuning Publication-Quality ggplots
     1. Adding layers and geoms (e.g., `ggrepel`)
     2. Plot-builders (e.g., `factoextra`)
     3. Combining plots
-5.  Fine-Tuning Publication-Quality ggplots
     1. Exporting plots
     2. Formatting text
     3. Ordering categorical variables
+
   
 ## How we're going to run {-}
 
