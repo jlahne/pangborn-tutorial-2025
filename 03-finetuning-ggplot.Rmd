@@ -43,6 +43,10 @@ ggsave("img/penalty-lift.jpeg", p1_berry_penalty)
 
 We saved our image as a JPEG file, because JPEG is one of the formats preferred by [Food Quality and Preference](https://www.sciencedirect.com/journal/food-quality-and-preference/publish/guide-for-authors#toc-51). `ggsave()` supports a wide variety of image formats and will automatically use the file type corresponding to the file extension (the stuff after the `.`) in the `filename` argument.
 
+```{r default ggsave jpeg plot, echo = FALSE, purl = FALSE, out.width = "672px"}
+knitr::include_graphics('img/penalty-lift.jpeg')
+```
+
 Note that `ggsave()` is like making a `.pdf` version of your working documents: you will not be able to read the plot images into `R` for editing anymore, no matter which format you save in.
 
 We can also specify the `width` and `height` of our plot in inches, centimeters, or several other possible `units`. Aside from the **aspect ratio** of height to width, the size also affects how large various elements *look*, since `geom_*()` and text sizes are ultimately defined as fractions of inches.
@@ -50,22 +54,30 @@ We can also specify the `width` and `height` of our plot in inches, centimeters,
 Start by exporting your file at different `width` and `height` combinations until it looks legible, with readable text and other elements.
 
 ```{r ggsave-sized}
-ggsave("img/penalty-lift-6x4.jpeg", p1_berry_penalty,
-       width = 6,
-       height = 4,
+ggsave("img/penalty-lift-10x6.jpeg", p1_berry_penalty,
+       width = 10,
+       height = 6,
        units = "in") #inches
+```
+
+```{r 10x6 inch jpeg plot, echo = FALSE, purl = FALSE, out.width = "672px"}
+knitr::include_graphics('img/penalty-lift-10x6.jpeg')
 ```
 
 And then figure out the `dpi`, or number of dots per inch, needed to have a file that will print well. *Do not* just use the DPI you want to print at, especially if you're planning to use an image for a poster.
 
-The FQAP Guide for Authors also tells us that it wants "combination figures", which will include most graphs, at or above 500 dpi. A double column figure is about 7.5 inches or 190mm wide, so we need the image to be $7.5 \times 500 = 3750$ pixels wide. Since our nice plot had `height = 6`, we'll set the `dpi` so that $height \times dpi \geq 3750$.
+The FQAP Guide for Authors also tells us that it wants "combination figures", which will include most graphs, at or above 500 dpi. A double column figure is about 7.5 inches or 190mm wide, so we need the image to be $7.5 \times 500 = 3750$ pixels wide. Since our nice plot had `width = 10`, we'll set the `dpi` so that $height \times dpi \geq 3750$.
 
 ```{r fqap-resolution}
 ggsave("img/penalty-lift-double-column-width.jpeg", p1_berry_penalty,
-       width = 6,
-       height = 4,
+       width = 10,
+       height = 6,
        units = "in", #inches
-       dpi = 650) #slightly above 3750 / 6. Always err on the side of slightly too big!!
+       dpi = 400) #slightly above 3750 / 10. Always err on the side of slightly too big!!
+```
+
+```{r double column width jpeg plot, echo = FALSE, purl = FALSE, out.width = "672px"}
+knitr::include_graphics('img/penalty-lift-double-column-width.jpeg')
 ```
 
 We go into a lot more detail on common file types and image resolution math in the [Appendix](#ggformat).
@@ -80,7 +92,7 @@ We'll start with the penalty analysis plot.
 berry_penalty_analysis_data %>%
   ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
   geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry,) +
+  facet_wrap(~berry) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90))
 ```
@@ -224,6 +236,8 @@ berry_penalty_analysis_data %>%
          Title = str_to_title(berry)) # Capitalizes the first letter of each word
 ```
 
+#### Replacing text
+
 `str_replace()` and `str_replace_all()` are very useful for dealing with underscores or periods. You give it `string`, the text vector you want to modify (inside `mutate()`, a column name); then `pattern`, the character(s) you want to replace; then `replacement`, what you want to replace them with.
 
 ```{r replacing underscores with str_replace}
@@ -274,6 +288,8 @@ str_replace_all("long.text.with.many.periods", "\\.", " ") # Replaces only dots
 We have to **escape** the period (with an escaped backslash, technically, but for now just know that you must put two backslashes `\\` before special characters when using `stringr`). Because the `str_*` functions with a `pattern` can use **Regular Expressions** (or regex), the characters (`\`, `.`, `[`, `]`, `{`, `}`, `(`, `)`, `<`, `>`, `*`, `+`, `-`, `=`, `!`, `?`, `^`, `$`, and `|`) need to be **escaped** with two backslashes if you need to replace them.
 
 Regex are extremely powerful tools for finding patterns in text, similar to the intuitive ways a human might recognize something like an email address, a measurement, or a parenthetical. We will not be talking about regex today, but if you want to see some examples and resources for learning how to use them, we've provided a short overview and links to some resources in the [Appendix](#regex).
+
+#### Splitting and combining text
 
 It's also very common that you may have variable names in one column which actually represent multiple variables, and may want to, say, color-code the modality of the cata variables so that appearance attributes are one color and taste attributes are another.
 
@@ -364,7 +380,7 @@ Some `ggplot2` functions will always refer to whatever you specified in `aes(x =
 
 Sometimes, there are multiple ways of removing a plot element, and whichever one you remember is fine to use. One notable example that may save you some typing is the `labs()` function, which lets you label the `x` and `y` axes, the whole plot `title`, and so on with a slightly easier-to-remember interface than `theme()`. Setting any of the `labs()` arguments `= NULL` will remove it from the plot.
 
-```{r removing the legend}
+```{r removing axis labels}
 berry_penalty_analysis_data %>%
   mutate(cata_variable_clean = tidytext::reorder_within(x = cata_variable_clean,
                                                         by = penalty_lift,
@@ -408,31 +424,14 @@ berry_penalty_analysis_data %>%
 `p2_ca_cider_cata` has a lot of different aesthetics, some of . Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
 ```{r worse penalty analysis example, fig.width = 7}
-ca_cider_coords %>%
+draft_cider_plot <- ca_cider_coords %>%
   ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
   geom_point() +
   ggrepel::geom_text_repel(mapping = aes(label = name)) +
   theme_bw() + 
   scale_color_manual(values = c("darkorange", "darkgreen"))
-```
 
-### Tweaking legends
-
-If you want to remove *specific geoms* from the legend, then you have to adjust your `geom_*()` calls.
-
-```{r excluding geoms from the legend}
-ca_cider_coords %>%
-  filter(type == "col") %>%
-  ggplot(aes(x = `Dim 1`, y = `Dim 2`,
-             label = name, color = modality)) -> ca_cider_colored
-
-ca_cider_colored +
-  geom_point() +
-  ggrepel::geom_text_repel()
-
-ca_cider_colored +
-  geom_point() +
-  ggrepel::geom_text_repel(show.legend = FALSE)
+draft_cider_plot
 ```
 
 ### Axis and plot labels based on variables
@@ -465,12 +464,7 @@ str_c("Dimension 2 (",
 To add it to the plot, we can use the `labs()` function, which lets you label the `x` and `y` axes, the whole plot `title`, and so on.
 
 ```{r making wordy axis labels}
-ca_cider_coords %>%
-  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
-  geom_point() +
-  ggrepel::geom_text_repel(mapping = aes(label = name)) +
-  theme_bw() + 
-  scale_color_manual(values = c("darkorange", "darkgreen")) +
+draft_cider_plot +
   labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
        y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
        subtitle = "Correspondence Analysis biplot (symmetric)",
@@ -485,10 +479,7 @@ You may have noticed that `ggplot2` doesn't give any particular weight to the or
 The easiest way to address this is just to add two lines that are thicker/darker/different at $y = 0$ and $x = 0$, which we can do by adding more `geom_*()`s...
 
 ```{r using geom_vline and geom_hline at the end}
-ca_cider_coords %>%
-  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
-  geom_point() +
-  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+draft_cider_plot +
   theme_void() +
   geom_vline(xintercept = 0, color = "grey", linewidth = 1) +
   geom_hline(yintercept = 0, color = "grey", linewidth = 1)
@@ -523,3 +514,112 @@ This will often make plots resulting from SVD wider than they are tall, since th
 
 ### Using only part of the dataset for each geom
 
+Many methods of SVD, including Correspondence Analysis, combine points from different datasets or yield coordinates for row and column variables that you may want to display significantly differently--maybe you want your PCA columns to be arrows instead of points, or (as you've seen above) having a point *and* a text label for every attribute is too busy. How do we plot only a subset of points for certain `geom_*()`s?
+
+You already know how to make certain subsets of points a different shape, color, size, opacity, and so on. But how do you avoid plotting certain subsets at all?
+
+You have to make a data frame with only the rows that you want e.g., `geom_point()`, to plot, and pass it into the `data` argument. We'll show how to do this using the `tidyverse` function `filter()`, but if there's another way you're more comfortable with then use that instead.
+
+```{r plotting different datasets with different geoms}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_point(data = ca_cider_coords %>% filter(type == "row")) +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw()
+```
+
+If the columns happened to have different names, you'd have to specify the `aes()` mappings separately in each `geom_*()`, and it may make more sense to start with an empty `ggplot()` call and then add on `geom_*()`s each with their own `mapping` and `data` arguments if there's just one `geom_*()` per data frame.
+
+### Tweaking legends
+
+Legends can often get busy, or have information on them that's not actually clarifying anything in the plot, *especially* when you've got `geom_*()`s on the same plot using different datasets so that, for example, the color of the points isn't adding anything.
+
+```{r messy legend example}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_point(aes(shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row")) +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw()
+```
+
+If you want to remove *specific geoms* from the legend, then you have to adjust your `geom_*()` calls.
+
+```{r excluding geoms from the legend}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_point(aes(shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row"),
+             show.legend = FALSE) +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw()
+```
+If you want to move specific *aesthetics* (`linetype`, `linewidth`, `color`, `shape`, etc) from the legend, then you can add the `guides()` function to your plot and specify which ones should be in the legend and which shouldn't.
+
+```{r excluding aesthetics from the legend}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) +
+  geom_point(aes(shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row")) +
+  ggrepel::geom_text_repel(mapping = aes(label = name)) +
+  theme_bw() +
+  guides(shape = guide_legend(),
+         color = "none")
+```
+
+### Aesthetics that can't use scale_*() functions
+
+It's also common for row and column biplots to use different text styling for the row and column *variables*. Based on what you know so far, since we have the row/column designation in the `type` column, you might start out trying to set the `fontface` aesthetic like this:
+
+```{r naive approach to fontface error=TRUE}
+ca_cider_coords %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name, fontface = type)) +
+  theme_bw() + 
+  scale_color_manual(values = c("darkorange", "darkgreen"))
+```
+You can map variable levels to colors, shapes, sizes, and so on using the `scale_*()` functions, but not all aesthetics can be controlled in this way. Most of the exceptions are related to text--font face, font family, and the justification of the text require that you have a variable that contains the name or value directly (`plain`, `bold`, `italic`, or `bold.italic` for `fontface`; `serif`, `sans`-serif, or `mono`space for `family`; and a number from 0-1 for `hjust` and `vjust`), if one `geom_text()` should have different values for different rows.
+
+Basically, if we want to accomplish this in `ggplot2`, we'll need to make a column with `plain` for our rows with samples and `italic` for our rows with CATA variables.
+
+```{r ggplot fontfaces the right way}
+ca_cider_coords %>%
+  mutate(font = if_else(type == "row", "plain", "italic")) %>%
+  ggplot(mapping = aes(x = `Dim 1`, y = `Dim 2`, color = type)) + 
+  geom_point() +
+  ggrepel::geom_text_repel(mapping = aes(label = name, fontface = font)) +
+  theme_bw() + 
+  scale_color_manual(values = c("darkorange", "darkgreen"))
+```
+
+### Putting it all together
+
+Finally, as our last act, we're ready to walk line-by-line through the last example figure, our fancier correspondence analysis plot.
+
+```{r final walkthrough of correspondence analysis}
+nice_cider_labels <-
+  labs(x = str_c("Dimension 1, ", round(ca_cider$eig[1, 2], 1), "% of inertia"),
+       y = str_c("Dimension 2, ", round(ca_cider$eig[2, 2], 1), "% of inertia"),
+       subtitle = "Correspondence Analysis biplot (symmetric)",
+       title = "Effect of cider serving temperature on consumer sensory perception")
+
+ca_cider_coords %>%
+  mutate(font = if_else(type == "row", "plain", "italic")) %>%
+  ggplot(aes(x = `Dim 1`, y = `Dim 2`)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkgrey") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "darkgrey") +
+  geom_point(aes(color = type, shape = Temperature),
+             data = ca_cider_coords %>% filter(type == "row"),
+             size = 3) +
+  ggrepel::geom_text_repel(aes(label = name, color = type, fontface = font),
+                           show.legend = FALSE) +
+  coord_equal() + 
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  nice_cider_labels + 
+  scale_color_manual(values = c("darkorange", "darkgreen")) +
+  scale_shape_manual(values = c(8, 16)) +
+  guides(shape = guide_legend(),
+         color = "none")
+```

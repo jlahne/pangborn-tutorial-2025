@@ -1,6 +1,6 @@
 # Wrap-up and further resources
 
-```{r setup, include = FALSE, purl = FALSE}
+```{r setup-4, include = FALSE, purl = FALSE}
 library(tidyverse)
 knitr::opts_chunk$set(fig.align = "center", warning = FALSE)
 ```
