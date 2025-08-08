@@ -22,9 +22,7 @@ fine-tuning-publication-quality-ggplots
 exporting-and-saving-plots
 fine-tuning-bar-plots-facets-with-different-categorical-variables
 horizontal-text-with-coord_flip
-ordered-categorical-variables
-specifying-ordinal-variables-as-factors
-facets-with-different-category-orders
+reorderwithin
 making-labels-look-okay-powerful-text-manipulation-with-stringr
 replacing-text
 splitting-and-combining-text

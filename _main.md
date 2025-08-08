@@ -40,16 +40,17 @@ Today's workshop is going to take ~3 hours, and we'll be covering the following 
 
 1.  Importing/Exporting/Organizing Data
     1. Reading tabular data
-    2. Basic data cleaning
+    2. Workflow overview
     3. Saving/exporting data
-3.  Intro to `ggplot2`
-5.  Fine-Tuning Publication-Quality ggplots
-    1. Adding layers and geoms (e.g., `ggrepel`)
-    2. Plot-builders (e.g., `factoextra`)
-    3. Combining plots
+2.  Intro to `ggplot2`
+    1. Creating plots with `ggplot()`
+    2. Mapping variables to plot elements with `aes()`
+    3. Adding data layers (`geom_*()`s)
+    4. Themes, scales, and facets
+3.  Fine-Tuning Publication-Quality ggplots
     1. Exporting plots
-    2. Formatting text
-    3. Ordering categorical variables
+    2. Fine-tuning plots with categorical/text data
+    3. Fine-tuning SVD biplots
 
   
 ## How we're going to run {-}
@@ -162,7 +163,7 @@ getwd()
 ```
 
 ```
-## [1] "/Users/jake/Library/CloudStorage/Dropbox/Work/Collaborations/2025/pangborn-tutorial-2025"
+## [1] "C:/Users/Leah/Documents/pangborn-tutorial-2025"
 ```
 
 Therefore, **relative to the working directory**, the file path to this data is `data/clt-berry-data.csv`.  Please note that this is the UNIX convention for file paths: in Windows, the backslash `\` is used to separate directories.  Happily, RStudio will translate between the two conventions, so you can just follow along with the macOS/UNIX convention (`/`) in this workshop.
@@ -173,13 +174,15 @@ raw_berry_data <- read_csv(file = "data/clt-berry-data.csv")
 raw_cider_data <- read_csv(file = "data/CiderDryness_SensoryDATA.csv")
 ```
 
-As a note, in many countries the separator (delimiter) will be the semi-colon (`;`), since the comma is used as the decimal marker.  To read files formatted this way, you can use the `read_csv2()` function.  If you encounter tab-separated values files (`.tsv`) you can use the `read_tsv()` function.  If you have more non-standard delimiters, you can use the `read_delim()` function, which will allow you to specify your own delimiter characters.  Excel stores data by default in the `.xlsx` format, which can be read by installing and using the `readxl` package (or saving Excel data as `.csv`).  You can also read many other formats of tabular data using the `rio` package ("read input/output"), which can be installed from CRAN (using, as you have learned, `install.packages("rio")`).
+As a note, in many countries the separator (delimiter) will be the semi-colon (`;`), since the comma is used as the decimal marker.  To read files formatted this way, you can use the `read_csv2()` function.  If you encounter tab-separated values files (`.tsv`) you can use the `read_tsv()` function.  If you have more non-standard delimiters, you can use the `read_delim()` function, which will allow you to specify your own delimiter characters.  Excel stores data by default in the `.xlsx` format, which can be read by installing and using the `{readxl}` package (or saving Excel data as `.csv`).  You can also read many other formats of tabular data using the `{rio}` package ("read input/output"), which can be installed from CRAN (using `install.packages("rio")`).
 
 The `read_csv()` function creates a type of object in `R` called a `tibble`, which is a special type of `data.frame`.  These are rectangular "spreadsheet-like" objects like you would encounter in Excel or manipulate in JMP or SPSS.
 
 ## The destination
 
-The plan here is to present "full" workflows for data import, wrangling, and visualization below so as to give a skeleton to work through.  This is going to look like a lot of code at once, but I don't use anything in these workflows that we will not be covering (in some way!) today.  Hopefully, by the end of today's workshop you will be able both to understand and dissect complex code and use it to build your own analyses and visualizations.
+The plan here is to present "full" workflows for data import, wrangling, and visualization below so as to give a skeleton to work through. This looks like a lot of code at once, but we will be covering (almost) every piece one at a time. We won't be going into detail on a lot of the "wrangling" like getting data from "wide" to "long" forms or combining data frames, but you can do much of this in Excel if you're more comfortable or you can look at [Hadley Wickham's book *R for Data Science*](https://r4ds.had.co.nz/index.html) or [past Sensometrics tutorials](https://lhami.github.io/pangborn-r-tutorial-2023/) for help. You should already have copies of the raw and "wrangled" data. Ask us for a flash drive, if not.
+
+Hopefully, by the end of today's workshop you will be able both to understand and dissect complex code and use it to build your own analyses and visualizations.
 
 ### Cider {#cider}
 
@@ -349,7 +352,7 @@ p1_berry_penalty
 
 What do we mean by "publication quality" visualizations?  Neither of us are theorists of visualization--for that, we would recommend that you look at the excellent work from [Claus Wilke](https://clauswilke.com/dataviz/) and [Kieran Healey](https://socviz.co/index.html#preface).  We will not be discussing (in any detail) ideas about which color palettes best communicate different types of data, what kinds of displays are most effective (box plots vs violin plots vs ...), or whether pie charts are really so bad (mostly yes).  
 
-Rather, we have noticed that most `R` packages for data analysis provide visualizations as part of their output, and many sensory scientists are using these *default* outputs in publications.  This is annoying because often these visualizations are meant to be part of the data exploration/analysis process: they are not polished or they don't display the data to its best advantage (whatever that is for the particular case).  In this workshop, we want to help you develop the competency to alter or re-make these visualizations for yourself so that you can produce visualizations that are relevant to *your* application, that are attractive and easy to read.
+Rather, we have noticed that most `R` packages for data analysis provide visualizations as part of their output, and many sensory scientists are using these *default* outputs in publications.  This is annoying because often these visualizations are meant to be part of the data exploration/analysis process: they are not polished or they don't display the data to its best advantage (whatever that is for the particular case). In this workshop, we want to help you develop the competency to alter or re-make these visualizations for yourself so that you can produce visualizations that are relevant to *your* application, that are attractive and easy to read.
 
 As an example, the `FactoMineR` package has excellent default visualizations for exploring and understanding the basic outputs of many common multivariate analyses used by sensory scientists. We can take a look at our cider CATA data visualized as a symmetric CA "biplot" without much effort:
 
@@ -391,9 +394,9 @@ The motivating point, here, is to be able to make visualizations that accomplish
 
 ## Saving your data
 
-Often, you will have an ugly, raw data file.  You want to clean up this data file: remove junk variables, rename columns, omit outliers, and have something that is actually workable.  Sometimes, you create a new intermediate product (say, a penalty-analysis table) that you'd like to be able to share and work with elsewhere.  Now, you know how to do all that in `R`, often with fewer clicks and less effort than in Excel or other WYSIWYG tool.  But once you restart your `R` session, you will need to rerun this workflow, and you can't access your data products in other software.
+Often, you will have an ugly, raw data file, and in R, you will remove junk variables, rename columns, omit outliers, and more to create something that is actually workable. Sometimes, you create a new intermediate product (say, a penalty-analysis table) that you'd like to be able to share and work with elsewhere.
 
-To save this work, you can use `write.csv()` or `readr::write_csv()` and its relatives (e.g., functions like `write.file()`).  These will create **or overwrite** a file in the directory location you specify.
+To avoid re-running your workflow every time you restart your `R` session or to access your data products in other software, you must save your work with `write.csv()` or `readr::write_csv()` and its relatives (e.g., functions like `write.file()`).  These will create **or overwrite** a file in the directory location you specify.
 
 
 ``` r
@@ -402,7 +405,7 @@ write_csv(x = berry_penalty_analysis_data,
           file = "data/berry-penalty-data.csv")
 ```
 
-Sometimes, we want to be able to save `R` data for re-loading later.  It's good to do this explicitly, rather than relying on something like RStudio's version of autosaving (which we've turned off for you at the beginning of this tutorial).  You might want to do this instead of `write_csv()` because:
+Sometimes, we want to be able to save `R` data for re-loading later. It's good to do this explicitly, rather than relying on something like RStudio's version of autosaving (which we showed you how to turn off ahead of the tutorial).  You might want to do this instead of `write_csv()` when:
 
 -  You have non-tabular data (lists, tensors, ggplots, etc)
 -  You are saving the output of time-consuming workflows and want to be able to start again without re-running those workflows
@@ -438,7 +441,7 @@ This can be very helpful for sharing data.
 
 ### A note on replicability
 
-In order to make sure that your data are replicable, you should *always* keep your raw data and the script/code that transforms that data into your cleaned form.  That way, when (*not* if) you discover a couple minor errors, you can go back and fix them, and you will not be stuck trying to remember how you overwrote this data in the first place.
+In order to make sure that your data are replicable, you should *always* keep your raw data and the script/code that transforms that data into your cleaned form. That way, when (*not* if) you discover a couple minor errors, you can go back and fix them, and you will not be stuck trying to remember how you overwrote this data in the first place.
 
 This will also protect you if, in the future, someone looks at your data and asks something like "but where did these means come from?"
 
@@ -456,15 +459,15 @@ output: html_document
   
 
 
-Base `R` includes extremely powerful utilities for data visualization, but most modern applications make use of the `tidyverse` package `ggplot2`.
+Base `R` includes extremely powerful utilities for data visualization, but most modern applications make use of the `{tidyverse}` package `{ggplot2}`.
 
 A quick word about base `R` plotting--I don't mean to declare that you can't use base `R` plotting for your projects at all, and I have published several papers using base `R` plots.  Particularly as you are using `R` for your own data exploration (not meant for sharing outside your team, say), base utilities like `plot()` will be very useful for quick insight. 
 
 `ggplot2` provides a standardized, programmatic interface for data visualization, in contrast to the piecemeal approach common to base `R` graphics plotting.  This means that, while the syntax itself can be challenging to learn, syntax for different tasks is linked by a common vocabulary, and differs in logical and predictable ways.
 
-Together with other `tidyverse` principles (like `select()` and `filter()` approaches), `ggplot2` makes it easy to make publication-quality visualizations with relative ease.
+Together with other `{tidyverse}` principles (like `select()` and `filter()` approaches), `ggplot2` makes it easy to make publication-quality visualizations with relative ease.
 
-In general, `ggplot2` works best with data in "long" or "tidy" format, such as that resulting from the output of `pivot_longer()`.  The 
+In general, `ggplot2` works best with data in "long" or "tidy" format, such as that resulting from the output of `pivot_longer()`.
 
 The schematic elements of a ggplot are as follows:
 
@@ -509,15 +512,15 @@ This doesn't look all that impressive--partly because the data being plotted its
 
 The `ggplot()` function takes two arguments that are essential, as well as some others you'll rarely use.  The first, `data = `, is straightforward, and you'll usually be passing data to the function at the end of some pipeline using `%>%`
 
-The second, `mapping = `, is less clear.  This argument requires the `aes()` function, which can be read as the "aesthetic" function.  The way that this function works is quite complex, and really not worth digging into here, but I understand it in my head as **telling `ggplot()` what part of my data is going to connect to what part of the plot**.  So, if we write `aes(x = `Dim 1`)`, we can read this in our heads as "the values of x will be mapped from the 'Dim 1' column". 
+The second, `mapping = `, is less clear.  This argument requires the `aes()` function, which can be read as the "aesthetic" function.  The way that this function works is quite complex, and really not worth digging into here, but I understand it in my head as **telling `ggplot()` what part of my data is going to connect to what part of the plot**.  So, if we write ``aes(x = `Dim 1`)``, we can read this in our heads as "the values of x will be mapped from the 'Dim 1' column". 
 
-> NB: The use of the `\`` character in `\`Dim 1\`` is because the name is technically "non-syntactic": it has a space in it.  `R` allows us to save objects with names that violate the rules--containing whitespace (` `), starting with a number character, or including characters like `(`, `)`, `$`, etc by using the `\`` operators.  The `{tidyverse}` functions do this automatically.
+> NB: The use of the `` ` `` character in `` `Dim 1` `` is because the name is technically "non-syntactic": it has a space in it. `R` allows us to save objects with names that violate the rules--containing whitespace (` `), starting with a number character, or including characters like `(`, `)`, `$`, etc--by using the `` ` `` operators.  The `{tidyverse}` functions do this automatically.
 
 This sentence tells us the other important thing about `ggplot()` and the `aes()` mappings: **mapped variables each have to be in their own column**.  This is another reason that `ggplot()` requires tidy data. 
 
 ## Adding layers with `geom_*()` functions
 
-In the above example, we added (literally, using `+`) a function called `geom_point()` to the base `ggplot()` call.  This is functionally a "layer" of our plot, that tells `ggplot2` how to actually visualize the elements specified in the `aes()` function--in the case of `geom_point()`, we create a point for each row's combination of `x = MerlynScale_Ranking` and `y = Liking`.
+In the above example, we added (literally, using `+`) a function called `geom_point()` to the base `ggplot()` call.  This is functionally a "layer" of our plot, that tells `ggplot2` how to actually visualize the elements specified in the `aes()` function--in the case of `geom_point()`, we create a point for each row's combination of ``x = `Dim 1` `` and ``y = `Dim 2` ``.
 
 
 ``` r
@@ -542,7 +545,7 @@ ca_cider_coords %>%
 ## # ℹ 18 more rows
 ```
 
-There are many `geom_*()` functions in `ggplot2`, and many others defined in other accessory packages.  These are the heart of visualizations.  We can swap them out to get different results:
+There are many `geom_*()` functions in `{ggplot2}`, and many others defined in accessory packages.  These are the heart of visualizations.  We can swap them out to get different results:
 
 
 ``` r
@@ -570,7 +573,7 @@ ca_cider_coords %>%
 
 Note that we don't need to tell *either* `geom_point()` or `geom_text()` what `x` and `y` are--they "inherit" them from the `ggplot()` function to which they are added (`+`), which defines the plot itself.  But we did need to give a *new* mapping--`label = name`--to the `geom_text()` layer, which tells it which column to get the labels for each point.
 
-What other arguments can be set to aesthetics?  Well, we can set other visual properties like **color**, **size**, **transparency** (called "alpha"), and so on.  Let's go ahead and color the different points and labels by whether they are ciders or CATA descriptors--whether they are rows or columns in the original contingency table.
+What other arguments can be set to aesthetics?  Well, we can set other visual properties like **color**, **size**, **transparency** (called `alpha`), and so on.  Let's go ahead and color the different points and labels by whether they are ciders or CATA descriptors--whether they are rows or columns in the original contingency table.
 
 
 ``` r
@@ -633,7 +636,7 @@ ca_cider_coords %>%
 
 ### Using `theme_*()` to change visual options quickly
 
-In the last several plots, notice that we are using the default (and to my mind unattractive) grey background of `ggplot2`.  If this tutorial had a single goal, it would be to eliminate this theme from published papers.  It looks *bad* (and tends to reduce contrast).
+In the last several plots, notice that we are using the default (and to my mind unattractive) grey background of `ggplot2`. If this tutorial had a single goal, it would be to eliminate this theme from published papers. It looks *bad* (and tends to reduce contrast).
 
 
 ``` r
@@ -648,7 +651,7 @@ ca_cider_coords %>%
 
 <img src="02-ggplot2-basics_files/figure-html/adding a different theme-1.png" width="672" style="display: block; margin: auto;" />
 
-We can easily get rid of the grey by adding a `theme_bw()` call to the list of commands.  `ggplot2` includes a number of default `theme_*()` functions, and you can get many more through other `R` packages.  They can have subtle to dramatic effects:
+We can easily get rid of the grey by adding a `theme_bw()` call to the list of commands. `{ggplot2}` includes a number of default `theme_*()` functions, and you can get many more through other `R` packages.  They can have subtle to dramatic effects:
 
 
 ``` r
@@ -679,7 +682,7 @@ ca_cider_coords %>%
 
 <img src="02-ggplot2-basics_files/figure-html/using theme-1.png" width="672" style="display: block; margin: auto;" />
 
-You can see a nearly-full list of the arguments to `ggplot2::theme()` in the theme help files (`?theme`), unlike with `ggplot2` aesthetics and the `geom_*()` help files.
+You can see a nearly-full list of the arguments to `ggplot2::theme()` in the theme help files (`?theme`), unlike with `{ggplot2}` aesthetics and the `geom_*()` help files.
 
 Many calls to `theme()` involve `element_*()` functions.  When we remove elements, for example, we use `element_blank()` (not, for example, `NA` or `NULL` as we typically would in other parts of `R`).
 
@@ -722,9 +725,9 @@ All plots from here on in the script will *default* to the `theme_bw()` theme, w
 
 ### Changing aesthetic elements with `scale_*()` functions
 
-Finally, say we didn't like the default color set for the points.  
+Finally, say we didn't like the default color set for the points.
 
-How can we manipulate the colors that are plotted?  The **way in which** mapped, aesthetic variables are assigned to visual elements is controlled by the `scale_*()` functions.  
+How can we manipulate the colors that are plotted? The **way in which** mapped, aesthetic variables are assigned to visual elements is controlled by the `scale_*()` functions.
 
 In my experience, the most frequently encountered scales are those for color: either `scale_fill_*()` for solid objects (like the bars in a histogram) or `scale_color_*()` for lines and points (like the outlines of the histogram bars, or the points and letters in our scatterplots so far).  
 
@@ -756,7 +759,7 @@ p + scale_color_viridis_d()
 
 <img src="02-ggplot2-basics_files/figure-html/we can modify stored plots after the fact-1.png" width="672" style="display: block; margin: auto;" />
 
-`ggplot2` has a broad range of built-in options for scales, but there are many others available in add-on packages that build on top of it.  The `scale_*_viridis_*()` functions use a package callled `viridis` that provides (theoretically) color-blind safe colors for both continuous (gradient) and categorical (discrete) mappings, but I do find that their defaults (using light colors like yellow on one end of the scale) are hard to see for anyone!
+`ggplot2` has a broad range of built-in options for scales, but there are many others available in add-on packages that build on top of it.  The `scale_*_viridis_*()` functions use a package called `{viridis}` that provides color-blind safe colors for both continuous (gradient) and categorical (discrete) mappings, *but* their defaults (using light colors like yellow on one end of the scale) will inevitably have contrast issues with the plot background for `geom_text()` and `geom_point()`, making them hard to see for anyone!
 
 As we saw above, you can also build your own scales using the `scale_*_manual()` functions, in which you give a vector of the same length as your mapped aesthetic variable in order to set up the visual assignment.  That sounds jargon-y, so here is an example:
 
@@ -999,7 +1002,7 @@ It's good practice to export your plot as an image (or pdf or knit-together docu
 This is also, probably, the most important part of this chapter. You will have to get every plot that you publish out of `R` somehow, after all!
 
 ### Exporting Images with `ggsave()` {- #ggsave}
-You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc. 
+You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc.
 
 The easiest way to reproducibly save plots, so that all of your export options are in your code and you might be able to recreate it on a different computer, is with the function `ggplot2::ggsave()`, which works *similarly* to the `write_*()` functions and `save()`. You give it a file name to save to, relative to the current working directory, and then the variable that has your ggplot.
 
@@ -1049,7 +1052,7 @@ We go into a lot more detail on common file types and image resolution math in t
 
 We'll start with the penalty analysis plot.
 
-`p1_berry_penalty` uses some tricks from the `stringr` and `tidytext` packages in order to give us easy-to-read labels. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
 
 ``` r
@@ -1063,7 +1066,9 @@ berry_penalty_analysis_data %>%
 
 <img src="03-finetuning-ggplot_files/figure-html/worse berry penalty analysis example-1.png" width="672" style="display: block; margin: auto;" />
 
-Which we're showing because we have seen similar plots published in journal articles, with the difficult-to-read axes, underscores, redundant axis labels, and all. We can make this more readable by reordering the CATA attributes, shortening and reformatting the labels, and possibly by removing some extraneous elements like the `cata_variable` label. These are common steps that make a huge difference.
+We have seen similar plots published in journal articles, with the difficult-to-read axes, underscores, redundant axis labels, and all.
+
+We can make this more readable by reordering the CATA attributes, shortening and reformatting the labels, and possibly by removing some extraneous elements like the `cata_variable` label. These are common steps that make a huge difference, and we'll use some tricks from the `stringr` and `tidytext` packages for this.
 
 ### Horizontal text with coord_flip()
 
@@ -1083,7 +1088,23 @@ berry_penalty_analysis_data %>%
 
 Even though the CATA attributes are still cramped and this isn't the best use of space, they're much easier to read now. If you've only got one categorical axis, it's almost always going to be more readable to have it be the *vertical axis* so that the text is horizontal.
 
-### Ordered Categorical Variables
+### Ordered Categorical Variables {#reorderwithin}
+
+The CATA attributes are still cramped though, with some facets not having any responses for certain attributes that weren't in that berry's lexicon, and it's hard to individually make sense of the attributes in the order they've been in so far.
+
+`facet_wrap(..., scales = "free")` can drop unneeded attributes from plots, but it will still keep the same *order* of the attributes across all axes.
+
+
+``` r
+berry_penalty_analysis_data %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1, scales = "free") +
+  coord_flip() + 
+  theme_classic()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/free scales on ordered data-1.png" width="672" style="display: block; margin: auto;" />
 
 Many of the figures we've made so far have had an axis with a categorical variable. Have you figured out how `ggplot2` orders the levels of categorical variables? If you have noticed, it's likely because it's in a different order than the one we'd like.
 
@@ -1101,109 +1122,7 @@ berry_penalty_analysis_data %>%
 
 The CATA attributes are in alphabetical order (with the start of the alphabet the closest to 0). This is how `ggplot2` treats all `character` variables, and you can exert some control over the ordering by turning the variable into an ordered `factor`.
 
-#### Specifying Ordinal Variables as Factors
-
-You can order variables by hand, if there's a particular order you have in mind:
-
-
-``` r
-berry_penalty_analysis_data %>%
-  filter(str_detect(cata_variable, "taste")) %>%
-  mutate(cata_variable = factor(cata_variable,
-                                levels = c("taste_fruity",
-                                           "taste_melon", "taste_peachy", "taste_grapey", "taste_grape",
-                                           "taste_berry", "taste_cherry",
-                                           "taste_citrus", "taste_lemon",
-                                           "taste_tropical",
-                                           "taste_candy", "taste_caramel",
-                                           "taste_green", "taste_grassy", "taste_piney", "taste_minty",
-                                           "taste_earthy", "taste_fermented",
-                                           "taste_cinnamon", "taste_clove",
-                                           "taste_floral",
-                                           "taste_none"))) -> berry_penalty_manual_factors
-
-berry_penalty_manual_factors %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, nrow = 1) +
-  coord_flip() + 
-  theme_classic()
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/manually making ordered factors-1.png" width="672" style="display: block; margin: auto;" />
-
-Note that the attribute you list *first* when you're specifying the `levels` will become 1, then 2, then 3. With `coord_flip()`, that puts it at the bottom of the plot.
-
-
-``` r
-berry_penalty_manual_factors %>%
-  distinct(cata_variable) %>%
-  mutate(variable_number = as.numeric(cata_variable))
-```
-
-```
-## # A tibble: 22 × 2
-##    cata_variable   variable_number
-##    <fct>                     <dbl>
-##  1 taste_berry                   6
-##  2 taste_cinnamon               19
-##  3 taste_clove                  20
-##  4 taste_earthy                 17
-##  5 taste_fermented              18
-##  6 taste_floral                 21
-##  7 taste_fruity                  1
-##  8 taste_grape                   5
-##  9 taste_grassy                 14
-## 10 taste_lemon                   9
-## # ℹ 12 more rows
-```
-
-This gives us control, but it's pretty annoying to write out for large lists of attributes, and you have to be sure the spelling and capitalization match exactly. Often, like with the penalty analysis plots, what we actually want to do is order the Attributes in terms of some other numerical variable, like frequency or size of penalty.
-
-One way is to `arrange()` the data the way you want it and then use that order to specify the levels.
-
-
-``` r
-berry_penalty_analysis_data %>%
-  # Counting the number of times each attribute is used across all products:
-  group_by(cata_variable) %>%
-  mutate(variable_count = sum(count)) %>%
-  ungroup() %>%
-  # Arranging from least-to-most used:
-  arrange(variable_count) %>%
-  # Converting to a factor, so the least-used will be 1st, then the next:
-  mutate(cata_variable = factor(cata_variable, levels = unique(cata_variable),
-                            ordered = TRUE),
-         variable_number = as.numeric(cata_variable)) -> berry_penalty_frequency_factors
-
-#Now the plot:
-berry_penalty_frequency_factors %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, nrow = 1) +
-  coord_flip() + 
-  theme_classic()
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/using another variable to order a factor-1.png" width="672" style="display: block; margin: auto;" />
-
-#### Facets with Different Category-Orders
-
-You'll notice that our reordered categorical axes still have the same order across all of the plots. This would be true even if we used the within-product sums already in the `count` column to calculate `level`s. The order is based on factor levels, which are fixed within each column: `Fresh_Apples` can't be "more than" `Dry` in one part of the `cata_variable` column and "less than" in another part.
-
-On its own, `facet_wrap(..., scales = "free")` can drop unneeded attributes from plots, but it will still keep the same *order* of the attributes across all axes.
-
-
-``` r
-berry_penalty_frequency_factors %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, nrow = 1) +
-  coord_flip() + 
-  theme_classic()
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/free scales on ordered data-1.png" width="672" style="display: block; margin: auto;" />
+You can order variables by hand, if there's a particular order you have in mind, by turning them into factors. See the [Appendix](#factororder) for examples. We're going to use the utilities from the `{tidytext}` package to make it a bit easier.
 
 If you have a faceted plot and you want each facet to have a different ordering of the terms, like in our big penalty analysis example, you'll have to use `tidytext::reorder_within()`, `tidytext::scale_*_reordered()`, *and* `facet_wrap(..., scales = "free")`, all at once:
 
@@ -1225,7 +1144,7 @@ berry_penalty_analysis_data %>%
 
 ### Making labels look okay: Powerful text manipulation with `stringr`
 
-A good `R` variable or column name doesn't have any spaces or punctuation other than underscores (`_`) and dots (`.`), to avoid all those pesky backticks (`\``) in our code.
+A good `R` variable or column name doesn't have any spaces or punctuation other than underscores (`_`) and dots (`.`), to avoid all those pesky backticks (`` ` ``) in our code.
 
 This is very different from what a good label in a plot looks like. You'll often want to make some sort of mass changes to column names or text variables before plotting, in order to address this.
 
@@ -1596,7 +1515,7 @@ berry_penalty_analysis_data %>%
 
 ## Fine-tuning biplots with different types of variables
 
-`p2_ca_cider_cata` has a lot of different aesthetics, some of . Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+`p2_ca_cider_cata` has a lot of different aesthetics, some of which only apply to certain rows of the data frame and some of which require specific values in the column they're mapped to. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
 
 ``` r
@@ -2439,6 +2358,113 @@ In cases like these, it may be easier to output a size with the right *aspect ra
 ### Other Image Export Options
 
 This is not a `knitr` or `bookdown` tutorial, but we used the `bookdown` package to make the [online webpage version of this tutorial](https://jlahne.github.io/pangborn-tutorial-2025/). It comes with its own advantages and challenges, but it does significantly streamline the image-generation process for any project where the only file you need is one LaTeX file, `.html` page, or `.pdf` output with all of the text and all of the figures. If that sounds appealing to you, turn your attention to ["bookdown: Authoring Books and Technical Documents with `R` Markdown" by Yihui Xie](https://bookdown.org/yihui/bookdown/).
+
+## Specifying Ordinal Variables as Factors {- #factororder}
+In [Chapter 3](#reorderwithin), we discussed the easiest way to adjust the order that levels of a categorical variable show up in plot axes for different facets, using `tidytext::reorder_within()`. You may want to have more fine-tuned control over the order, or you may need to adjust the order for an aesthetic that isn't necessarily the `x` or `y` axis. You can do this with `factor`s.
+
+You can manually specify each level in order to `factor(x, levels = c(...))`:
+
+
+``` r
+berry_penalty_analysis_data %>%
+  filter(str_detect(cata_variable, "taste")) %>%
+  mutate(cata_variable = factor(cata_variable,
+                                levels = c("taste_fruity",
+                                           "taste_melon", "taste_peachy", "taste_grapey", "taste_grape",
+                                           "taste_berry", "taste_cherry",
+                                           "taste_citrus", "taste_lemon",
+                                           "taste_tropical",
+                                           "taste_candy", "taste_caramel",
+                                           "taste_green", "taste_grassy", "taste_piney", "taste_minty",
+                                           "taste_earthy", "taste_fermented",
+                                           "taste_cinnamon", "taste_clove",
+                                           "taste_floral",
+                                           "taste_none"))) -> berry_penalty_manual_factors
+
+berry_penalty_manual_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+<img src="appendix_files/figure-html/manually making ordered factors-1.png" width="672" style="display: block; margin: auto;" />
+
+Note that the attribute you list *first* when you're specifying the `levels` will become 1, then 2, then 3. With `coord_flip()`, that puts it at the bottom of the plot.
+
+
+``` r
+berry_penalty_manual_factors %>%
+  distinct(cata_variable) %>%
+  mutate(variable_number = as.numeric(cata_variable))
+```
+
+```
+## # A tibble: 22 × 2
+##    cata_variable   variable_number
+##    <fct>                     <dbl>
+##  1 taste_berry                   6
+##  2 taste_cinnamon               19
+##  3 taste_clove                  20
+##  4 taste_earthy                 17
+##  5 taste_fermented              18
+##  6 taste_floral                 21
+##  7 taste_fruity                  1
+##  8 taste_grape                   5
+##  9 taste_grassy                 14
+## 10 taste_lemon                   9
+## # ℹ 12 more rows
+```
+
+This gives us control, but it's pretty annoying to write out for large lists of attributes, and you have to be sure the spelling and capitalization match exactly. Often, like with the penalty analysis plots, what we actually want to do is order the Attributes in terms of some other numerical variable, like frequency or size of penalty.
+
+One way is to `arrange()` the data the way you want it and then use that order to specify the levels.
+
+
+``` r
+berry_penalty_analysis_data %>%
+  # Counting the number of times each attribute is used across all products:
+  group_by(cata_variable) %>%
+  mutate(variable_count = sum(count)) %>%
+  ungroup() %>%
+  # Arranging from least-to-most used:
+  arrange(variable_count) %>%
+  # Converting to a factor, so the least-used will be 1st, then the next:
+  mutate(cata_variable = factor(cata_variable, levels = unique(cata_variable),
+                            ordered = TRUE),
+         variable_number = as.numeric(cata_variable)) -> berry_penalty_frequency_factors
+
+#Now the plot:
+berry_penalty_frequency_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+<img src="appendix_files/figure-html/using another variable and arrange to order a factor-1.png" width="672" style="display: block; margin: auto;" />
+
+You'll notice that our reordered categorical axes still have the same order across all of the facets This would be true even if we used the within-product sums already in the `count` column to calculate `level`s. The order is based on factor levels, which are fixed within each column: `Fresh_Apples` can't be "more than" `Dry` in one part of the `cata_variable` column and "less than" in another part.
+
+Lastly, there's a base `R` version of `reorder`, which is a bit more compact because it does the summarizing, grouping, and ordering all in one function:
+
+
+``` r
+berry_penalty_analysis_data %>%
+  mutate(cata_variable = reorder(cata_variable, count, sum)) %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  tidytext::scale_x_reordered() +
+  facet_wrap(~berry, scales = "free", nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+<img src="appendix_files/figure-html/using another variable and reorder to reorder a factor-1.png" width="672" style="display: block; margin: auto;" />
+
+This also works to reorder variables for aesthetics other than `x` and `y`, like `color`, `fill`, and `linewidth`, controlling which part of the scale they're mapped to and what order they show up in on the legend.
 
 ## Regular Expressions {- #regex}
 A regular expression, or regex, is a way of compactly writing a `pattern` that will let you match similarly-structured pieces of text. You may use regex because you want the list of matches itself, because you want to do something to pieces of text with a certain pattern somewhere in them, or because you want to replace all matches with something else. Regex were originally designed in the 1980s, and are also a central part of the design of the `stringr` package (although `stringr` still has a lot of useful tools without them).

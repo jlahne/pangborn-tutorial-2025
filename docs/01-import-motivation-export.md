@@ -33,7 +33,7 @@ getwd()
 ```
 
 ```
-## [1] "/Users/jake/Library/CloudStorage/Dropbox/Work/Collaborations/2025/pangborn-tutorial-2025"
+## [1] "C:/Users/Leah/Documents/pangborn-tutorial-2025"
 ```
 
 Therefore, **relative to the working directory**, the file path to this data is `data/clt-berry-data.csv`.  Please note that this is the UNIX convention for file paths: in Windows, the backslash `\` is used to separate directories.  Happily, RStudio will translate between the two conventions, so you can just follow along with the macOS/UNIX convention (`/`) in this workshop.
@@ -44,13 +44,15 @@ raw_berry_data <- read_csv(file = "data/clt-berry-data.csv")
 raw_cider_data <- read_csv(file = "data/CiderDryness_SensoryDATA.csv")
 ```
 
-As a note, in many countries the separator (delimiter) will be the semi-colon (`;`), since the comma is used as the decimal marker.  To read files formatted this way, you can use the `read_csv2()` function.  If you encounter tab-separated values files (`.tsv`) you can use the `read_tsv()` function.  If you have more non-standard delimiters, you can use the `read_delim()` function, which will allow you to specify your own delimiter characters.  Excel stores data by default in the `.xlsx` format, which can be read by installing and using the `readxl` package (or saving Excel data as `.csv`).  You can also read many other formats of tabular data using the `rio` package ("read input/output"), which can be installed from CRAN (using, as you have learned, `install.packages("rio")`).
+As a note, in many countries the separator (delimiter) will be the semi-colon (`;`), since the comma is used as the decimal marker.  To read files formatted this way, you can use the `read_csv2()` function.  If you encounter tab-separated values files (`.tsv`) you can use the `read_tsv()` function.  If you have more non-standard delimiters, you can use the `read_delim()` function, which will allow you to specify your own delimiter characters.  Excel stores data by default in the `.xlsx` format, which can be read by installing and using the `{readxl}` package (or saving Excel data as `.csv`).  You can also read many other formats of tabular data using the `{rio}` package ("read input/output"), which can be installed from CRAN (using `install.packages("rio")`).
 
 The `read_csv()` function creates a type of object in `R` called a `tibble`, which is a special type of `data.frame`.  These are rectangular "spreadsheet-like" objects like you would encounter in Excel or manipulate in JMP or SPSS.
 
 ## The destination
 
-The plan here is to present "full" workflows for data import, wrangling, and visualization below so as to give a skeleton to work through.  This is going to look like a lot of code at once, but I don't use anything in these workflows that we will not be covering (in some way!) today.  Hopefully, by the end of today's workshop you will be able both to understand and dissect complex code and use it to build your own analyses and visualizations.
+The plan here is to present "full" workflows for data import, wrangling, and visualization below so as to give a skeleton to work through. This looks like a lot of code at once, but we will be covering (almost) every piece one at a time. We won't be going into detail on a lot of the "wrangling" like getting data from "wide" to "long" forms or combining data frames, but you can do much of this in Excel if you're more comfortable or you can look at [Hadley Wickham's book *R for Data Science*](https://r4ds.had.co.nz/index.html) or [past Sensometrics tutorials](https://lhami.github.io/pangborn-r-tutorial-2023/) for help. You should already have copies of the raw and "wrangled" data. Ask us for a flash drive, if not.
+
+Hopefully, by the end of today's workshop you will be able both to understand and dissect complex code and use it to build your own analyses and visualizations.
 
 ### Cider {#cider}
 
@@ -220,7 +222,7 @@ p1_berry_penalty
 
 What do we mean by "publication quality" visualizations?  Neither of us are theorists of visualization--for that, we would recommend that you look at the excellent work from [Claus Wilke](https://clauswilke.com/dataviz/) and [Kieran Healey](https://socviz.co/index.html#preface).  We will not be discussing (in any detail) ideas about which color palettes best communicate different types of data, what kinds of displays are most effective (box plots vs violin plots vs ...), or whether pie charts are really so bad (mostly yes).  
 
-Rather, we have noticed that most `R` packages for data analysis provide visualizations as part of their output, and many sensory scientists are using these *default* outputs in publications.  This is annoying because often these visualizations are meant to be part of the data exploration/analysis process: they are not polished or they don't display the data to its best advantage (whatever that is for the particular case).  In this workshop, we want to help you develop the competency to alter or re-make these visualizations for yourself so that you can produce visualizations that are relevant to *your* application, that are attractive and easy to read.
+Rather, we have noticed that most `R` packages for data analysis provide visualizations as part of their output, and many sensory scientists are using these *default* outputs in publications.  This is annoying because often these visualizations are meant to be part of the data exploration/analysis process: they are not polished or they don't display the data to its best advantage (whatever that is for the particular case). In this workshop, we want to help you develop the competency to alter or re-make these visualizations for yourself so that you can produce visualizations that are relevant to *your* application, that are attractive and easy to read.
 
 As an example, the `FactoMineR` package has excellent default visualizations for exploring and understanding the basic outputs of many common multivariate analyses used by sensory scientists. We can take a look at our cider CATA data visualized as a symmetric CA "biplot" without much effort:
 
@@ -262,9 +264,9 @@ The motivating point, here, is to be able to make visualizations that accomplish
 
 ## Saving your data
 
-Often, you will have an ugly, raw data file.  You want to clean up this data file: remove junk variables, rename columns, omit outliers, and have something that is actually workable.  Sometimes, you create a new intermediate product (say, a penalty-analysis table) that you'd like to be able to share and work with elsewhere.  Now, you know how to do all that in `R`, often with fewer clicks and less effort than in Excel or other WYSIWYG tool.  But once you restart your `R` session, you will need to rerun this workflow, and you can't access your data products in other software.
+Often, you will have an ugly, raw data file, and in R, you will remove junk variables, rename columns, omit outliers, and more to create something that is actually workable. Sometimes, you create a new intermediate product (say, a penalty-analysis table) that you'd like to be able to share and work with elsewhere.
 
-To save this work, you can use `write.csv()` or `readr::write_csv()` and its relatives (e.g., functions like `write.file()`).  These will create **or overwrite** a file in the directory location you specify.
+To avoid re-running your workflow every time you restart your `R` session or to access your data products in other software, you must save your work with `write.csv()` or `readr::write_csv()` and its relatives (e.g., functions like `write.file()`).  These will create **or overwrite** a file in the directory location you specify.
 
 
 ``` r
@@ -273,7 +275,7 @@ write_csv(x = berry_penalty_analysis_data,
           file = "data/berry-penalty-data.csv")
 ```
 
-Sometimes, we want to be able to save `R` data for re-loading later.  It's good to do this explicitly, rather than relying on something like RStudio's version of autosaving (which we've turned off for you at the beginning of this tutorial).  You might want to do this instead of `write_csv()` because:
+Sometimes, we want to be able to save `R` data for re-loading later. It's good to do this explicitly, rather than relying on something like RStudio's version of autosaving (which we showed you how to turn off ahead of the tutorial).  You might want to do this instead of `write_csv()` when:
 
 -  You have non-tabular data (lists, tensors, ggplots, etc)
 -  You are saving the output of time-consuming workflows and want to be able to start again without re-running those workflows
@@ -309,7 +311,7 @@ This can be very helpful for sharing data.
 
 ### A note on replicability
 
-In order to make sure that your data are replicable, you should *always* keep your raw data and the script/code that transforms that data into your cleaned form.  That way, when (*not* if) you discover a couple minor errors, you can go back and fix them, and you will not be stuck trying to remember how you overwrote this data in the first place.
+In order to make sure that your data are replicable, you should *always* keep your raw data and the script/code that transforms that data into your cleaned form. That way, when (*not* if) you discover a couple minor errors, you can go back and fix them, and you will not be stuck trying to remember how you overwrote this data in the first place.
 
 This will also protect you if, in the future, someone looks at your data and asks something like "but where did these means come from?"
 

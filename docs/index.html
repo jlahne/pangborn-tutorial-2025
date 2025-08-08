@@ -220,7 +220,7 @@ div.csl-indent {
 <li class="chapter" data-level="3.2" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#fine-tuning-bar-plots-facets-with-different-categorical-variables"><i class="fa fa-check"></i><b>3.2</b> Fine-tuning bar plots &amp; facets with different categorical variables</a>
 <ul>
 <li class="chapter" data-level="3.2.1" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#horizontal-text-with-coord_flip"><i class="fa fa-check"></i><b>3.2.1</b> Horizontal text with coord_flip()</a></li>
-<li class="chapter" data-level="3.2.2" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#ordered-categorical-variables"><i class="fa fa-check"></i><b>3.2.2</b> Ordered Categorical Variables</a></li>
+<li class="chapter" data-level="3.2.2" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#reorderwithin"><i class="fa fa-check"></i><b>3.2.2</b> Ordered Categorical Variables</a></li>
 <li class="chapter" data-level="3.2.3" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#making-labels-look-okay-powerful-text-manipulation-with-stringr"><i class="fa fa-check"></i><b>3.2.3</b> Making labels look okay: Powerful text manipulation with <code>stringr</code></a></li>
 <li class="chapter" data-level="3.2.4" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#removing-plot-elements"><i class="fa fa-check"></i><b>3.2.4</b> Removing Plot Elements</a></li>
 <li class="chapter" data-level="3.2.5" data-path="fine-tuning-publication-quality-ggplots.html"><a href="fine-tuning-publication-quality-ggplots.html#putting-it-all-together"><i class="fa fa-check"></i><b>3.2.5</b> Putting it all together</a></li>
@@ -258,6 +258,7 @@ div.csl-indent {
 <li class="chapter" data-level="" data-path="appendix.html"><a href="appendix.html#raster-image-resolutions"><i class="fa fa-check"></i>Raster Image Resolutions</a></li>
 <li class="chapter" data-level="4.4.1" data-path="appendix.html"><a href="appendix.html#other-image-export-options"><i class="fa fa-check"></i><b>4.4.1</b> Other Image Export Options</a></li>
 </ul></li>
+<li class="chapter" data-level="" data-path="appendix.html"><a href="appendix.html#factororder"><i class="fa fa-check"></i>Specifying Ordinal Variables as Factors</a></li>
 <li class="chapter" data-level="" data-path="appendix.html"><a href="appendix.html#regex"><i class="fa fa-check"></i>Regular Expressions</a></li>
 </ul></li>
 </ul>
@@ -308,18 +309,21 @@ div.csl-indent {
 <li>Importing/Exporting/Organizing Data
 <ol style="list-style-type: decimal">
 <li>Reading tabular data</li>
-<li>Basic data cleaning</li>
+<li>Workflow overview</li>
 <li>Saving/exporting data</li>
 </ol></li>
-<li>Intro to <code>ggplot2</code></li>
+<li>Intro to <code>ggplot2</code>
+<ol style="list-style-type: decimal">
+<li>Creating plots with <code>ggplot()</code></li>
+<li>Mapping variables to plot elements with <code>aes()</code></li>
+<li>Adding data layers (<code>geom_*()</code>s)</li>
+<li>Themes, scales, and facets</li>
+</ol></li>
 <li>Fine-Tuning Publication-Quality ggplots
 <ol style="list-style-type: decimal">
-<li>Adding layers and geoms (e.g., <code>ggrepel</code>)</li>
-<li>Plot-builders (e.g., <code>factoextra</code>)</li>
-<li>Combining plots</li>
 <li>Exporting plots</li>
-<li>Formatting text</li>
-<li>Ordering categorical variables</li>
+<li>Fine-tuning plots with categorical/text data</li>
+<li>Fine-tuning SVD biplots</li>
 </ol></li>
 </ol>
 </div>

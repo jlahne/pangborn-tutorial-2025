@@ -53,16 +53,17 @@ Today's workshop is going to take ~3 hours, and we'll be covering the following 
 
 1.  Importing/Exporting/Organizing Data
     1. Reading tabular data
-    2. Basic data cleaning
+    2. Workflow overview
     3. Saving/exporting data
-3.  Intro to `ggplot2`
-5.  Fine-Tuning Publication-Quality ggplots
-    1. Adding layers and geoms (e.g., `ggrepel`)
-    2. Plot-builders (e.g., `factoextra`)
-    3. Combining plots
+2.  Intro to `ggplot2`
+    1. Creating plots with `ggplot()`
+    2. Mapping variables to plot elements with `aes()`
+    3. Adding data layers (`geom_*()`s)
+    4. Themes, scales, and facets
+3.  Fine-Tuning Publication-Quality ggplots
     1. Exporting plots
-    2. Formatting text
-    3. Ordering categorical variables
+    2. Fine-tuning plots with categorical/text data
+    3. Fine-tuning SVD biplots
 
   
 ## How we're going to run {-}

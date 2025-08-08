@@ -34,7 +34,7 @@ It's good practice to export your plot as an image (or pdf or knit-together docu
 This is also, probably, the most important part of this chapter. You will have to get every plot that you publish out of `R` somehow, after all!
 
 ### Exporting Images with `ggsave()` {- #ggsave}
-You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc. 
+You can, as we've already discussed, save a `ggplot` object in a `.rds` file. But that won't let you put it into your powerpoint, or manuscript, or take it to the printer. You need an image file. The exact *type* of image will depend on the other software you're using for your report, presentation, paper, book, etc.
 
 The easiest way to reproducibly save plots, so that all of your export options are in your code and you might be able to recreate it on a different computer, is with the function `ggplot2::ggsave()`, which works *similarly* to the `write_*()` functions and `save()`. You give it a file name to save to, relative to the current working directory, and then the variable that has your ggplot.
 
@@ -84,7 +84,7 @@ We go into a lot more detail on common file types and image resolution math in t
 
 We'll start with the penalty analysis plot.
 
-`p1_berry_penalty` uses some tricks from the `stringr` and `tidytext` packages in order to give us easy-to-read labels. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
 
 ``` r
@@ -98,7 +98,9 @@ berry_penalty_analysis_data %>%
 
 <img src="03-finetuning-ggplot_files/figure-html/worse berry penalty analysis example-1.png" width="672" style="display: block; margin: auto;" />
 
-Which we're showing because we have seen similar plots published in journal articles, with the difficult-to-read axes, underscores, redundant axis labels, and all. We can make this more readable by reordering the CATA attributes, shortening and reformatting the labels, and possibly by removing some extraneous elements like the `cata_variable` label. These are common steps that make a huge difference.
+We have seen similar plots published in journal articles, with the difficult-to-read axes, underscores, redundant axis labels, and all.
+
+We can make this more readable by reordering the CATA attributes, shortening and reformatting the labels, and possibly by removing some extraneous elements like the `cata_variable` label. These are common steps that make a huge difference, and we'll use some tricks from the `stringr` and `tidytext` packages for this.
 
 ### Horizontal text with coord_flip()
 
@@ -118,7 +120,23 @@ berry_penalty_analysis_data %>%
 
 Even though the CATA attributes are still cramped and this isn't the best use of space, they're much easier to read now. If you've only got one categorical axis, it's almost always going to be more readable to have it be the *vertical axis* so that the text is horizontal.
 
-### Ordered Categorical Variables
+### Ordered Categorical Variables {#reorderwithin}
+
+The CATA attributes are still cramped though, with some facets not having any responses for certain attributes that weren't in that berry's lexicon, and it's hard to individually make sense of the attributes in the order they've been in so far.
+
+`facet_wrap(..., scales = "free")` can drop unneeded attributes from plots, but it will still keep the same *order* of the attributes across all axes.
+
+
+``` r
+berry_penalty_analysis_data %>%
+  ggplot(mapping = aes(x = cata_variable_clean, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1, scales = "free") +
+  coord_flip() + 
+  theme_classic()
+```
+
+<img src="03-finetuning-ggplot_files/figure-html/free scales on ordered data-1.png" width="672" style="display: block; margin: auto;" />
 
 Many of the figures we've made so far have had an axis with a categorical variable. Have you figured out how `ggplot2` orders the levels of categorical variables? If you have noticed, it's likely because it's in a different order than the one we'd like.
 
@@ -136,109 +154,7 @@ berry_penalty_analysis_data %>%
 
 The CATA attributes are in alphabetical order (with the start of the alphabet the closest to 0). This is how `ggplot2` treats all `character` variables, and you can exert some control over the ordering by turning the variable into an ordered `factor`.
 
-#### Specifying Ordinal Variables as Factors
-
-You can order variables by hand, if there's a particular order you have in mind:
-
-
-``` r
-berry_penalty_analysis_data %>%
-  filter(str_detect(cata_variable, "taste")) %>%
-  mutate(cata_variable = factor(cata_variable,
-                                levels = c("taste_fruity",
-                                           "taste_melon", "taste_peachy", "taste_grapey", "taste_grape",
-                                           "taste_berry", "taste_cherry",
-                                           "taste_citrus", "taste_lemon",
-                                           "taste_tropical",
-                                           "taste_candy", "taste_caramel",
-                                           "taste_green", "taste_grassy", "taste_piney", "taste_minty",
-                                           "taste_earthy", "taste_fermented",
-                                           "taste_cinnamon", "taste_clove",
-                                           "taste_floral",
-                                           "taste_none"))) -> berry_penalty_manual_factors
-
-berry_penalty_manual_factors %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, nrow = 1) +
-  coord_flip() + 
-  theme_classic()
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/manually making ordered factors-1.png" width="672" style="display: block; margin: auto;" />
-
-Note that the attribute you list *first* when you're specifying the `levels` will become 1, then 2, then 3. With `coord_flip()`, that puts it at the bottom of the plot.
-
-
-``` r
-berry_penalty_manual_factors %>%
-  distinct(cata_variable) %>%
-  mutate(variable_number = as.numeric(cata_variable))
-```
-
-```
-## # A tibble: 22 × 2
-##    cata_variable   variable_number
-##    <fct>                     <dbl>
-##  1 taste_berry                   6
-##  2 taste_cinnamon               19
-##  3 taste_clove                  20
-##  4 taste_earthy                 17
-##  5 taste_fermented              18
-##  6 taste_floral                 21
-##  7 taste_fruity                  1
-##  8 taste_grape                   5
-##  9 taste_grassy                 14
-## 10 taste_lemon                   9
-## # ℹ 12 more rows
-```
-
-This gives us control, but it's pretty annoying to write out for large lists of attributes, and you have to be sure the spelling and capitalization match exactly. Often, like with the penalty analysis plots, what we actually want to do is order the Attributes in terms of some other numerical variable, like frequency or size of penalty.
-
-One way is to `arrange()` the data the way you want it and then use that order to specify the levels.
-
-
-``` r
-berry_penalty_analysis_data %>%
-  # Counting the number of times each attribute is used across all products:
-  group_by(cata_variable) %>%
-  mutate(variable_count = sum(count)) %>%
-  ungroup() %>%
-  # Arranging from least-to-most used:
-  arrange(variable_count) %>%
-  # Converting to a factor, so the least-used will be 1st, then the next:
-  mutate(cata_variable = factor(cata_variable, levels = unique(cata_variable),
-                            ordered = TRUE),
-         variable_number = as.numeric(cata_variable)) -> berry_penalty_frequency_factors
-
-#Now the plot:
-berry_penalty_frequency_factors %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, nrow = 1) +
-  coord_flip() + 
-  theme_classic()
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/using another variable to order a factor-1.png" width="672" style="display: block; margin: auto;" />
-
-#### Facets with Different Category-Orders
-
-You'll notice that our reordered categorical axes still have the same order across all of the plots. This would be true even if we used the within-product sums already in the `count` column to calculate `level`s. The order is based on factor levels, which are fixed within each column: `Fresh_Apples` can't be "more than" `Dry` in one part of the `cata_variable` column and "less than" in another part.
-
-On its own, `facet_wrap(..., scales = "free")` can drop unneeded attributes from plots, but it will still keep the same *order* of the attributes across all axes.
-
-
-``` r
-berry_penalty_frequency_factors %>%
-  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
-  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
-  facet_wrap(~berry, nrow = 1) +
-  coord_flip() + 
-  theme_classic()
-```
-
-<img src="03-finetuning-ggplot_files/figure-html/free scales on ordered data-1.png" width="672" style="display: block; margin: auto;" />
+You can order variables by hand, if there's a particular order you have in mind, by turning them into factors. See the [Appendix](#factororder) for examples. We're going to use the utilities from the `{tidytext}` package to make it a bit easier.
 
 If you have a faceted plot and you want each facet to have a different ordering of the terms, like in our big penalty analysis example, you'll have to use `tidytext::reorder_within()`, `tidytext::scale_*_reordered()`, *and* `facet_wrap(..., scales = "free")`, all at once:
 
@@ -260,7 +176,7 @@ berry_penalty_analysis_data %>%
 
 ### Making labels look okay: Powerful text manipulation with `stringr`
 
-A good `R` variable or column name doesn't have any spaces or punctuation other than underscores (`_`) and dots (`.`), to avoid all those pesky backticks (`\``) in our code.
+A good `R` variable or column name doesn't have any spaces or punctuation other than underscores (`_`) and dots (`.`), to avoid all those pesky backticks (`` ` ``) in our code.
 
 This is very different from what a good label in a plot looks like. You'll often want to make some sort of mass changes to column names or text variables before plotting, in order to address this.
 
@@ -631,7 +547,7 @@ berry_penalty_analysis_data %>%
 
 ## Fine-tuning biplots with different types of variables
 
-`p2_ca_cider_cata` has a lot of different aesthetics, some of . Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
+`p2_ca_cider_cata` has a lot of different aesthetics, some of which only apply to certain rows of the data frame and some of which require specific values in the column they're mapped to. Using the existing column names and variable-codes in our original data to make a first draft of a plot, it would've looked more like this:
 
 
 ``` r

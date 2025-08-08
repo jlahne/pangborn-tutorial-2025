@@ -505,6 +505,113 @@ In cases like these, it may be easier to output a size with the right *aspect ra
 
 This is not a `knitr` or `bookdown` tutorial, but we used the `bookdown` package to make the [online webpage version of this tutorial](https://jlahne.github.io/pangborn-tutorial-2025/). It comes with its own advantages and challenges, but it does significantly streamline the image-generation process for any project where the only file you need is one LaTeX file, `.html` page, or `.pdf` output with all of the text and all of the figures. If that sounds appealing to you, turn your attention to ["bookdown: Authoring Books and Technical Documents with `R` Markdown" by Yihui Xie](https://bookdown.org/yihui/bookdown/).
 
+## Specifying Ordinal Variables as Factors {- #factororder}
+In [Chapter 3](#reorderwithin), we discussed the easiest way to adjust the order that levels of a categorical variable show up in plot axes for different facets, using `tidytext::reorder_within()`. You may want to have more fine-tuned control over the order, or you may need to adjust the order for an aesthetic that isn't necessarily the `x` or `y` axis. You can do this with `factor`s.
+
+You can manually specify each level in order to `factor(x, levels = c(...))`:
+
+
+``` r
+berry_penalty_analysis_data %>%
+  filter(str_detect(cata_variable, "taste")) %>%
+  mutate(cata_variable = factor(cata_variable,
+                                levels = c("taste_fruity",
+                                           "taste_melon", "taste_peachy", "taste_grapey", "taste_grape",
+                                           "taste_berry", "taste_cherry",
+                                           "taste_citrus", "taste_lemon",
+                                           "taste_tropical",
+                                           "taste_candy", "taste_caramel",
+                                           "taste_green", "taste_grassy", "taste_piney", "taste_minty",
+                                           "taste_earthy", "taste_fermented",
+                                           "taste_cinnamon", "taste_clove",
+                                           "taste_floral",
+                                           "taste_none"))) -> berry_penalty_manual_factors
+
+berry_penalty_manual_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+<img src="appendix_files/figure-html/manually making ordered factors-1.png" width="672" style="display: block; margin: auto;" />
+
+Note that the attribute you list *first* when you're specifying the `levels` will become 1, then 2, then 3. With `coord_flip()`, that puts it at the bottom of the plot.
+
+
+``` r
+berry_penalty_manual_factors %>%
+  distinct(cata_variable) %>%
+  mutate(variable_number = as.numeric(cata_variable))
+```
+
+```
+## # A tibble: 22 × 2
+##    cata_variable   variable_number
+##    <fct>                     <dbl>
+##  1 taste_berry                   6
+##  2 taste_cinnamon               19
+##  3 taste_clove                  20
+##  4 taste_earthy                 17
+##  5 taste_fermented              18
+##  6 taste_floral                 21
+##  7 taste_fruity                  1
+##  8 taste_grape                   5
+##  9 taste_grassy                 14
+## 10 taste_lemon                   9
+## # ℹ 12 more rows
+```
+
+This gives us control, but it's pretty annoying to write out for large lists of attributes, and you have to be sure the spelling and capitalization match exactly. Often, like with the penalty analysis plots, what we actually want to do is order the Attributes in terms of some other numerical variable, like frequency or size of penalty.
+
+One way is to `arrange()` the data the way you want it and then use that order to specify the levels.
+
+
+``` r
+berry_penalty_analysis_data %>%
+  # Counting the number of times each attribute is used across all products:
+  group_by(cata_variable) %>%
+  mutate(variable_count = sum(count)) %>%
+  ungroup() %>%
+  # Arranging from least-to-most used:
+  arrange(variable_count) %>%
+  # Converting to a factor, so the least-used will be 1st, then the next:
+  mutate(cata_variable = factor(cata_variable, levels = unique(cata_variable),
+                            ordered = TRUE),
+         variable_number = as.numeric(cata_variable)) -> berry_penalty_frequency_factors
+
+#Now the plot:
+berry_penalty_frequency_factors %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  facet_wrap(~berry, nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+<img src="appendix_files/figure-html/using another variable and arrange to order a factor-1.png" width="672" style="display: block; margin: auto;" />
+
+You'll notice that our reordered categorical axes still have the same order across all of the facets This would be true even if we used the within-product sums already in the `count` column to calculate `level`s. The order is based on factor levels, which are fixed within each column: `Fresh_Apples` can't be "more than" `Dry` in one part of the `cata_variable` column and "less than" in another part.
+
+Lastly, there's a base `R` version of `reorder`, which is a bit more compact because it does the summarizing, grouping, and ordering all in one function:
+
+
+``` r
+berry_penalty_analysis_data %>%
+  mutate(cata_variable = reorder(cata_variable, count, sum)) %>%
+  ggplot(mapping = aes(x = cata_variable, y = penalty_lift)) +
+  geom_col(aes(fill = penalty_lift), color = "white", show.legend = FALSE) + 
+  tidytext::scale_x_reordered() +
+  facet_wrap(~berry, scales = "free", nrow = 1) +
+  coord_flip() + 
+  theme_classic()
+```
+
+<img src="appendix_files/figure-html/using another variable and reorder to reorder a factor-1.png" width="672" style="display: block; margin: auto;" />
+
+This also works to reorder variables for aesthetics other than `x` and `y`, like `color`, `fill`, and `linewidth`, controlling which part of the scale they're mapped to and what order they show up in on the legend.
+
 ## Regular Expressions {- #regex}
 A regular expression, or regex, is a way of compactly writing a `pattern` that will let you match similarly-structured pieces of text. You may use regex because you want the list of matches itself, because you want to do something to pieces of text with a certain pattern somewhere in them, or because you want to replace all matches with something else. Regex were originally designed in the 1980s, and are also a central part of the design of the `stringr` package (although `stringr` still has a lot of useful tools without them).
 

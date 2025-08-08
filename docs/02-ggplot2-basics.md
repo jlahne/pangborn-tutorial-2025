@@ -6,15 +6,15 @@ output: html_document
   
 
 
-Base `R` includes extremely powerful utilities for data visualization, but most modern applications make use of the `tidyverse` package `ggplot2`.
+Base `R` includes extremely powerful utilities for data visualization, but most modern applications make use of the `{tidyverse}` package `{ggplot2}`.
 
 A quick word about base `R` plotting--I don't mean to declare that you can't use base `R` plotting for your projects at all, and I have published several papers using base `R` plots.  Particularly as you are using `R` for your own data exploration (not meant for sharing outside your team, say), base utilities like `plot()` will be very useful for quick insight. 
 
 `ggplot2` provides a standardized, programmatic interface for data visualization, in contrast to the piecemeal approach common to base `R` graphics plotting.  This means that, while the syntax itself can be challenging to learn, syntax for different tasks is linked by a common vocabulary, and differs in logical and predictable ways.
 
-Together with other `tidyverse` principles (like `select()` and `filter()` approaches), `ggplot2` makes it easy to make publication-quality visualizations with relative ease.
+Together with other `{tidyverse}` principles (like `select()` and `filter()` approaches), `ggplot2` makes it easy to make publication-quality visualizations with relative ease.
 
-In general, `ggplot2` works best with data in "long" or "tidy" format, such as that resulting from the output of `pivot_longer()`.  The 
+In general, `ggplot2` works best with data in "long" or "tidy" format, such as that resulting from the output of `pivot_longer()`.
 
 The schematic elements of a ggplot are as follows:
 
@@ -59,15 +59,15 @@ This doesn't look all that impressive--partly because the data being plotted its
 
 The `ggplot()` function takes two arguments that are essential, as well as some others you'll rarely use.  The first, `data = `, is straightforward, and you'll usually be passing data to the function at the end of some pipeline using `%>%`
 
-The second, `mapping = `, is less clear.  This argument requires the `aes()` function, which can be read as the "aesthetic" function.  The way that this function works is quite complex, and really not worth digging into here, but I understand it in my head as **telling `ggplot()` what part of my data is going to connect to what part of the plot**.  So, if we write `aes(x = `Dim 1`)`, we can read this in our heads as "the values of x will be mapped from the 'Dim 1' column". 
+The second, `mapping = `, is less clear.  This argument requires the `aes()` function, which can be read as the "aesthetic" function.  The way that this function works is quite complex, and really not worth digging into here, but I understand it in my head as **telling `ggplot()` what part of my data is going to connect to what part of the plot**.  So, if we write ``aes(x = `Dim 1`)``, we can read this in our heads as "the values of x will be mapped from the 'Dim 1' column". 
 
-> NB: The use of the `\`` character in `\`Dim 1\`` is because the name is technically "non-syntactic": it has a space in it.  `R` allows us to save objects with names that violate the rules--containing whitespace (` `), starting with a number character, or including characters like `(`, `)`, `$`, etc by using the `\`` operators.  The `{tidyverse}` functions do this automatically.
+> NB: The use of the `` ` `` character in `` `Dim 1` `` is because the name is technically "non-syntactic": it has a space in it. `R` allows us to save objects with names that violate the rules--containing whitespace (` `), starting with a number character, or including characters like `(`, `)`, `$`, etc--by using the `` ` `` operators.  The `{tidyverse}` functions do this automatically.
 
 This sentence tells us the other important thing about `ggplot()` and the `aes()` mappings: **mapped variables each have to be in their own column**.  This is another reason that `ggplot()` requires tidy data. 
 
 ## Adding layers with `geom_*()` functions
 
-In the above example, we added (literally, using `+`) a function called `geom_point()` to the base `ggplot()` call.  This is functionally a "layer" of our plot, that tells `ggplot2` how to actually visualize the elements specified in the `aes()` function--in the case of `geom_point()`, we create a point for each row's combination of `x = MerlynScale_Ranking` and `y = Liking`.
+In the above example, we added (literally, using `+`) a function called `geom_point()` to the base `ggplot()` call.  This is functionally a "layer" of our plot, that tells `ggplot2` how to actually visualize the elements specified in the `aes()` function--in the case of `geom_point()`, we create a point for each row's combination of ``x = `Dim 1` `` and ``y = `Dim 2` ``.
 
 
 ``` r
@@ -92,7 +92,7 @@ ca_cider_coords %>%
 ## # ℹ 18 more rows
 ```
 
-There are many `geom_*()` functions in `ggplot2`, and many others defined in other accessory packages.  These are the heart of visualizations.  We can swap them out to get different results:
+There are many `geom_*()` functions in `{ggplot2}`, and many others defined in accessory packages.  These are the heart of visualizations.  We can swap them out to get different results:
 
 
 ``` r
@@ -120,7 +120,7 @@ ca_cider_coords %>%
 
 Note that we don't need to tell *either* `geom_point()` or `geom_text()` what `x` and `y` are--they "inherit" them from the `ggplot()` function to which they are added (`+`), which defines the plot itself.  But we did need to give a *new* mapping--`label = name`--to the `geom_text()` layer, which tells it which column to get the labels for each point.
 
-What other arguments can be set to aesthetics?  Well, we can set other visual properties like **color**, **size**, **transparency** (called "alpha"), and so on.  Let's go ahead and color the different points and labels by whether they are ciders or CATA descriptors--whether they are rows or columns in the original contingency table.
+What other arguments can be set to aesthetics?  Well, we can set other visual properties like **color**, **size**, **transparency** (called `alpha`), and so on.  Let's go ahead and color the different points and labels by whether they are ciders or CATA descriptors--whether they are rows or columns in the original contingency table.
 
 
 ``` r
@@ -183,7 +183,7 @@ ca_cider_coords %>%
 
 ### Using `theme_*()` to change visual options quickly
 
-In the last several plots, notice that we are using the default (and to my mind unattractive) grey background of `ggplot2`.  If this tutorial had a single goal, it would be to eliminate this theme from published papers.  It looks *bad* (and tends to reduce contrast).
+In the last several plots, notice that we are using the default (and to my mind unattractive) grey background of `ggplot2`. If this tutorial had a single goal, it would be to eliminate this theme from published papers. It looks *bad* (and tends to reduce contrast).
 
 
 ``` r
@@ -198,7 +198,7 @@ ca_cider_coords %>%
 
 <img src="02-ggplot2-basics_files/figure-html/adding a different theme-1.png" width="672" style="display: block; margin: auto;" />
 
-We can easily get rid of the grey by adding a `theme_bw()` call to the list of commands.  `ggplot2` includes a number of default `theme_*()` functions, and you can get many more through other `R` packages.  They can have subtle to dramatic effects:
+We can easily get rid of the grey by adding a `theme_bw()` call to the list of commands. `{ggplot2}` includes a number of default `theme_*()` functions, and you can get many more through other `R` packages.  They can have subtle to dramatic effects:
 
 
 ``` r
@@ -229,7 +229,7 @@ ca_cider_coords %>%
 
 <img src="02-ggplot2-basics_files/figure-html/using theme-1.png" width="672" style="display: block; margin: auto;" />
 
-You can see a nearly-full list of the arguments to `ggplot2::theme()` in the theme help files (`?theme`), unlike with `ggplot2` aesthetics and the `geom_*()` help files.
+You can see a nearly-full list of the arguments to `ggplot2::theme()` in the theme help files (`?theme`), unlike with `{ggplot2}` aesthetics and the `geom_*()` help files.
 
 Many calls to `theme()` involve `element_*()` functions.  When we remove elements, for example, we use `element_blank()` (not, for example, `NA` or `NULL` as we typically would in other parts of `R`).
 
@@ -272,9 +272,9 @@ All plots from here on in the script will *default* to the `theme_bw()` theme, w
 
 ### Changing aesthetic elements with `scale_*()` functions
 
-Finally, say we didn't like the default color set for the points.  
+Finally, say we didn't like the default color set for the points.
 
-How can we manipulate the colors that are plotted?  The **way in which** mapped, aesthetic variables are assigned to visual elements is controlled by the `scale_*()` functions.  
+How can we manipulate the colors that are plotted? The **way in which** mapped, aesthetic variables are assigned to visual elements is controlled by the `scale_*()` functions.
 
 In my experience, the most frequently encountered scales are those for color: either `scale_fill_*()` for solid objects (like the bars in a histogram) or `scale_color_*()` for lines and points (like the outlines of the histogram bars, or the points and letters in our scatterplots so far).  
 
@@ -306,7 +306,7 @@ p + scale_color_viridis_d()
 
 <img src="02-ggplot2-basics_files/figure-html/we can modify stored plots after the fact-1.png" width="672" style="display: block; margin: auto;" />
 
-`ggplot2` has a broad range of built-in options for scales, but there are many others available in add-on packages that build on top of it.  The `scale_*_viridis_*()` functions use a package callled `viridis` that provides (theoretically) color-blind safe colors for both continuous (gradient) and categorical (discrete) mappings, but I do find that their defaults (using light colors like yellow on one end of the scale) are hard to see for anyone!
+`ggplot2` has a broad range of built-in options for scales, but there are many others available in add-on packages that build on top of it.  The `scale_*_viridis_*()` functions use a package called `{viridis}` that provides color-blind safe colors for both continuous (gradient) and categorical (discrete) mappings, *but* their defaults (using light colors like yellow on one end of the scale) will inevitably have contrast issues with the plot background for `geom_text()` and `geom_point()`, making them hard to see for anyone!
 
 As we saw above, you can also build your own scales using the `scale_*_manual()` functions, in which you give a vector of the same length as your mapped aesthetic variable in order to set up the visual assignment.  That sounds jargon-y, so here is an example:
 
