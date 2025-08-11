@@ -2,5 +2,5 @@
 library(tidyverse)
 ```
 
-```{r workshop-code, child = c("01-import-motivation-export.Rmd", "02-ggplot2-basics.Rmd", "03-finetuning-ggplot.Rmd", "04-ggplot2-extensions.Rmd", "05-conclusions.Rmd")}
+```{r workshop-code, child = c("01-import-motivation-export.Rmd", "02-ggplot2-basics.Rmd", "03-finetuning-ggplot.Rmd", "04-conclusions.Rmd")}
 ```
